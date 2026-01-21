@@ -11,7 +11,9 @@ function Login() {
     setMensaje("Conectando...");
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/login", {
+      const API = `${import.meta.env.VITE_API_URL}/auth`;
+
+      const response = await fetch(`${API}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -22,6 +24,7 @@ function Login() {
           rol,
         }),
       });
+
 
       const data = await response.json();
 

@@ -6,8 +6,10 @@ function ListaArchivos() {
   const [filtroFecha, setFiltroFecha] = useState("");
   const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = reciente → antiguo
 
+  const API = `${import.meta.env.VITE_API_URL}/archivos`;
+
   useEffect(() => {
-    fetch("http://localhost:3001/api/archivos")
+    fetch(API)
       .then((res) => res.json())
       .then((data) => setArchivos(data))
       .catch((error) => console.error("Error al cargar archivos", error));
@@ -15,10 +17,11 @@ function ListaArchivos() {
 
   const descargarArchivo = (nombreServidor) => {
     window.open(
-      `http://localhost:3001/api/archivos/descargar/${nombreServidor}`,
+      `${API}/descargar/${nombreServidor}`,
       "_blank"
     );
   };
+
 
   // FILTRADO + ORDENAMIENTO
   const archivosFiltrados = archivos

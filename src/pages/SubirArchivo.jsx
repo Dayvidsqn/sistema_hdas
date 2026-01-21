@@ -8,7 +8,7 @@ export default function SubirArchivo() {
   const [cargando, setCargando] = useState(false);
 
   const fileInputRef = useRef(null);
-  const API = "http://localhost:3001/api/archivos";
+  const API = `${import.meta.env.VITE_API_URL}/archivos`;
 
   /* ===============================
      MANEJO DE ARCHIVOS

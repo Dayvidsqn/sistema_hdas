@@ -1,4 +1,5 @@
-const API = "http://localhost:3001/api/alumnos";
+// Usar variable de entorno de Vite para la URL base de la API
+const API = `${import.meta.env.VITE_API_URL}/alumnos`;
 
 // Función para obtener headers con token
 function getHeaders() {
