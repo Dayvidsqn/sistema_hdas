@@ -22,7 +22,7 @@ const app = express();
 // Configurar CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://TU-FRONTEND.onrender.com"
+  "https://sistema-hdas-fr.onrender.com"
 ];
 
 app.use(cors({
