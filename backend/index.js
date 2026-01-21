@@ -21,8 +21,8 @@ const app = express();
 
 // Configurar CORS
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://sistema-hdas-fr.onrender.com"
+  "http://localhost:5173", // desarrollo
+  process.env.FRONTEND_URL // producción (Render)
 ];
 
 app.use(cors({
