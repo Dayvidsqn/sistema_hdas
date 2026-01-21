@@ -7,11 +7,8 @@ dotenv.config();
 const { Pool } = pkg;
 
 const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "sistema_hdas",
-  password: process.env.DB_PASSWORD || "admin",
-  port: parseInt(process.env.DB_PORT) || 5432,
+  connectionString: process.env.DATABASE_URL || `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  ssl: { rejectUnauthorized: false } // necesario para Render
 });
 
 // Probar la conexión
@@ -19,7 +16,7 @@ pool.connect((err, client, release) => {
   if (err) {
     console.error("Error conectando a la base de datos:", err.message);
   } else {
-    console.log("✅ Conectado a PostgreSQL:", process.env.DB_NAME);
+    console.log("✅ Conectado a PostgreSQL:", process.env.DB_NAME || "Render DB");
     release();
   }
 });
