@@ -20,10 +20,22 @@ import alumnosRoutes from "./routes/alumnos.js";
 const app = express();
 
 // Configurar CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://TU-FRONTEND.onrender.com"
+];
+
 app.use(cors({
-  origin: "http://localhost:5173", // URL de tu frontend Vite
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("No permitido por CORS"));
+    }
+  },
   credentials: true
 }));
+
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -73,6 +85,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend ejecutándose en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor backend ejecutándose en puerto ${PORT}`);
   console.log(`📁 Carpeta uploads: ${uploadsDir}`);
 });
