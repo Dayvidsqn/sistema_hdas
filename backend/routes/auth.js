@@ -1,5 +1,4 @@
 import express from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../db.js";
 
@@ -28,8 +27,8 @@ router.post("/login", async (req, res) => {
 
     const user = result.rows[0];
     
-    // Verificar contraseña
-    const validPassword = bcrypt.compareSync(password, user.password);
+    // 🔐 Comparación directa en texto plano
+    const validPassword = (password === user.password);
 
     if (!validPassword) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
