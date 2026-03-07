@@ -8,7 +8,9 @@ export default function SubirArchivo() {
   const [cargando, setCargando] = useState(false);
 
   const fileInputRef = useRef(null);
-  const API = `${import.meta.env.VITE_API_URL}/archivos`;
+  
+  // ✅ CORREGIDO: Agregamos /api a la URL base
+  const API = `${import.meta.env.VITE_API_URL}/api/archivos`;
 
   /* ===============================
      MANEJO DE ARCHIVOS
@@ -51,6 +53,7 @@ export default function SubirArchivo() {
 
       const token = localStorage.getItem("token");
 
+      // ✅ Esta URL ahora será: VITE_API_URL/api/archivos/subir
       const res = await fetch(`${API}/subir`, {
         method: "POST",
         headers: {
@@ -89,6 +92,7 @@ export default function SubirArchivo() {
     try {
       const token = localStorage.getItem("token");
 
+      // ✅ Esta URL ahora será: VITE_API_URL/api/archivos/profesor/mis-archivos
       const res = await fetch(`${API}/profesor/mis-archivos`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -96,7 +100,9 @@ export default function SubirArchivo() {
       });
 
       const data = await res.json();
-      setHistorial(data || []);
+      
+      // ✅ Seguridad: si data no es array, asignamos array vacío
+      setHistorial(Array.isArray(data) ? data : []);
 
     } catch {
       setHistorial([]);
