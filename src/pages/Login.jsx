@@ -28,6 +28,13 @@ function Login() {
 
       const data = await response.json();
 
+      console.log("📦 Respuesta del servidor:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        data: data
+      });
+
       if (!response.ok) {
         setMensaje(data.message || "Error al iniciar sesión");
         return;
