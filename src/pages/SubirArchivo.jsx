@@ -10,7 +10,7 @@ export default function SubirArchivo() {
   const fileInputRef = useRef(null);
   
   // ✅ CORREGIDO: Agregamos /api a la URL base
-  const API = `${import.meta.env.VITE_API_URL}/api/archivos`;
+  const API = `${import.meta.env.VITE_API_URL}/archivos`;
 
   /* ===============================
      MANEJO DE ARCHIVOS
