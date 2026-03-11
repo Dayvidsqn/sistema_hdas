@@ -7,14 +7,20 @@ const router = express.Router();
 // Obtener cursos asignados al profesor
 router.get("/mis-cursos", verificarToken, verificarRol(["profesor"]), async (req, res) => {
   try {
+    console.log("=== DEBUG: /mis-cursos ===");
+    console.log("Usuario autenticado:", req.user);
+    
     // Obtener el ID del profesor desde el usuario autenticado
+    console.log("Buscando profesor con usuario_id:", req.user.id);
     const profesorId = await obtenerProfesorId(req.user.id);
+    console.log("profesorId obtenido:", profesorId);
     
     if (!profesorId) {
+      console.log("❌ No se encontró profesor para usuario_id:", req.user.id);
       return res.status(404).json({ message: "Perfil de profesor no encontrado" });
     }
 
-    // Consultar cursos asignados
+    console.log("Ejecutando consulta SQL para profesorId:", profesorId);
     const result = await pool.query(
       `SELECT 
         a.id,
@@ -31,7 +37,9 @@ router.get("/mis-cursos", verificarToken, verificarRol(["profesor"]), async (req
       [profesorId]
     );
 
-    // Calcular progreso (porcentaje de alumnos con notas)
+    console.log("Resultado SQL:", result.rows);
+    
+    // Calcular progreso
     const cursosConProgreso = result.rows.map(curso => {
       const progreso = curso.total_alumnos > 0 
         ? Math.round((curso.notas_ingresadas / curso.total_alumnos) * 100) 
@@ -39,9 +47,13 @@ router.get("/mis-cursos", verificarToken, verificarRol(["profesor"]), async (req
       return { ...curso, progreso };
     });
 
+    console.log("Enviando respuesta con", cursosConProgreso.length, "cursos");
     res.json(cursosConProgreso);
+    
   } catch (error) {
-    console.error("Error al obtener cursos del profesor:", error);
+    console.error("❌ ERROR COMPLETO:", error);
+    console.error("Mensaje:", error.message);
+    console.error("Stack:", error.stack);
     res.status(500).json({ message: "Error al cargar cursos" });
   }
 });
