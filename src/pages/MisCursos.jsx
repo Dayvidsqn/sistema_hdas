@@ -105,7 +105,7 @@ export default function MisCursos() {
                 </span>
               </div>
 
-              {/* Barra de progreso (opcional) */}
+              {/* Barra de progreso */}
               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
@@ -122,10 +122,10 @@ export default function MisCursos() {
               </div>
             </div>
 
-            {/* Pie de tarjeta con información adicional */}
+            {/* ✅ PIE DE TARJETA CORREGIDO - sin fecha */}
             <div className="bg-gray-50 px-5 py-3 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
-                Asignado el: {new Date(curso.fecha_asignacion).toLocaleDateString()}
+              <p className="text-xs text-gray-500 text-center">
+                Curso activo
               </p>
             </div>
           </Link>
