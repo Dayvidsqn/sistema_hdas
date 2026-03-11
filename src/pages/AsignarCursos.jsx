@@ -17,7 +17,6 @@ export default function AsignarCursos() {
   const [cargando, setCargando] = useState(false);
 
   const API = `${import.meta.env.VITE_API_URL}`;
-  // const API = "http://localhost:3001/api";
 
   // Cargar profesores, cursos y asignaciones al iniciar
   useEffect(() => {
@@ -29,39 +28,82 @@ export default function AsignarCursos() {
   const cargarProfesores = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No hay token");
+        setProfesores([]);
+        return;
+      }
+
       const res = await fetch(`${API}/director/profesores`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      if (!res.ok) {
+        console.error("Error HTTP:", res.status);
+        setProfesores([]);
+        return;
+      }
+
       const data = await res.json();
-      setProfesores(data);
+      setProfesores(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar profesores:", error);
+      setProfesores([]);
     }
   };
 
   const cargarCursos = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/cursos`, {
+      if (!token) {
+        console.error("No hay token");
+        setCursos([]);
+        return;
+      }
+
+      // ✅ Ruta CORREGIDA: ahora es /director/cursos
+      const res = await fetch(`${API}/director/cursos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      if (!res.ok) {
+        console.error("Error HTTP:", res.status);
+        setCursos([]);
+        return;
+      }
+
       const data = await res.json();
-      setCursos(data);
+      setCursos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar cursos:", error);
+      setCursos([]);
     }
   };
 
   const cargarAsignaciones = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No hay token");
+        setAsignaciones([]);
+        return;
+      }
+
       const res = await fetch(`${API}/director/asignaciones`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      if (!res.ok) {
+        console.error("Error HTTP:", res.status);
+        setAsignaciones([]);
+        return;
+      }
+
       const data = await res.json();
-      setAsignaciones(data);
+      setAsignaciones(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar asignaciones:", error);
+      setAsignaciones([]);
     }
   };
 
@@ -86,6 +128,12 @@ export default function AsignarCursos() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setMensaje("No hay sesión activa");
+        setCargando(false);
+        return;
+      }
+
       const res = await fetch(`${API}/director/asignar-curso`, {
         method: "POST",
         headers: {
@@ -128,6 +176,11 @@ export default function AsignarCursos() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setMensaje("No hay sesión activa");
+        return;
+      }
+
       const res = await fetch(`${API}/director/asignaciones/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
@@ -137,7 +190,8 @@ export default function AsignarCursos() {
         setMensaje("✅ Asignación eliminada");
         cargarAsignaciones();
       } else {
-        setMensaje("Error al eliminar");
+        const data = await res.json();
+        setMensaje(data.message || "Error al eliminar");
       }
     } catch (error) {
       setMensaje("Error de conexión");
@@ -290,7 +344,7 @@ export default function AsignarCursos() {
                   <td className="p-3 text-center">
                     <button
                       onClick={() => eliminarAsignacion(a.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 font-semibold"
                       title="Eliminar asignación"
                     >
                       Eliminar

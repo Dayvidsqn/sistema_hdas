@@ -1,12 +1,11 @@
-// routes/director.js
 import express from "express";
 import pool from "../db.js";
-import { verificarRol } from "../middleware/authMiddleware.js";
+import { verificarToken, verificarRol } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Obtener todos los profesores (para el selector)
-router.get("/profesores", verificarRol(["director"]), async (req, res) => {
+// Obtener todos los profesores
+router.get("/profesores", verificarToken, verificarRol(["director"]), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT p.id, p.nombres, p.apellidos 
@@ -20,8 +19,8 @@ router.get("/profesores", verificarRol(["director"]), async (req, res) => {
   }
 });
 
-// Obtener todos los cursos 
-router.get("/cursos", verificarRol(["director"]), async (req, res) => {
+// Obtener todos los cursos
+router.get("/cursos", verificarToken, verificarRol(["director"]), async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM cursos ORDER BY nombre"
@@ -34,7 +33,7 @@ router.get("/cursos", verificarRol(["director"]), async (req, res) => {
 });
 
 // Obtener todas las asignaciones
-router.get("/asignaciones", verificarRol(["director"]), async (req, res) => {
+router.get("/asignaciones", verificarToken, verificarRol(["director"]), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT 
@@ -57,7 +56,7 @@ router.get("/asignaciones", verificarRol(["director"]), async (req, res) => {
 });
 
 // Asignar curso a profesor
-router.post("/asignar-curso", verificarRol(["director"]), async (req, res) => {
+router.post("/asignar-curso", verificarToken, verificarRol(["director"]), async (req, res) => {
   const { profesor_id, curso_id, grado, seccion } = req.body;
 
   try {
@@ -90,7 +89,7 @@ router.post("/asignar-curso", verificarRol(["director"]), async (req, res) => {
 });
 
 // Eliminar asignación
-router.delete("/asignaciones/:id", verificarRol(["director"]), async (req, res) => {
+router.delete("/asignaciones/:id", verificarToken, verificarRol(["director"]), async (req, res) => {
   const { id } = req.params;
 
   try {
