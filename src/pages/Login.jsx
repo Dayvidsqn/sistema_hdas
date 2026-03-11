@@ -11,7 +11,8 @@ function Login() {
     setMensaje("Conectando...");
 
     try {
-      const API = `${import.meta.env.VITE_API_URL}/auth`;
+      const API = `${import.meta.env.VITE_API_URL}/auth`; produccion
+      // const API = "http://localhost:3001/api/auth";
 
       const response = await fetch(`${API}/login`, {
         method: "POST",

@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import directorRoutes from "./routes/director.js";
 
 // Configurar __dirname para ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -54,6 +55,7 @@ app.use("/uploads", express.static(uploadsDir));
 app.use("/api/auth", authRoutes);
 app.use("/api/archivos", archivosRoutes);
 app.use("/api/alumnos", alumnosRoutes);
+app.use("/api/director", directorRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

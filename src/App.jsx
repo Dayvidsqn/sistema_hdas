@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Director from "./pages/Director";
 import Alumnos from "./pages/Alumnos";
 import Profesor from "./pages/Profesor";
+import AsignarCursos from "./pages/AsignarCursos";
 import DashboardLayout from "./layouts/DashboardLayout";
 
 function App() {
@@ -19,6 +20,15 @@ function App() {
           element={
             <DashboardLayout>
               <Director />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
+          path="/asignar-cursos"
+          element={
+            <DashboardLayout>
+              <AsignarCursos />
             </DashboardLayout>
           }
         />

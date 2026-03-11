@@ -33,3 +33,20 @@ export async function obtenerProfesorId(usuarioId) {
     return null;
   }
 }
+
+// ✅ NUEVO: Verificar rol
+export const verificarRol = (rolesPermitidos) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
+    if (!rolesPermitidos.includes(req.user.rol)) {
+      return res.status(403).json({ 
+        message: "Acceso denegado. No tienes permisos suficientes." 
+      });
+    }
+
+    next();
+  };
+};

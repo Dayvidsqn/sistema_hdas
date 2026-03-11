@@ -55,6 +55,20 @@ function Sidebar({ rol }) {
               </span>
               <span className="text-white font-extrabold">Trabajos subidos</span>
             </NavLink>
+            
+            {/* ✅ NUEVA SECCIÓN: Asignar Cursos */}
+            <NavLink
+              to="/asignar-cursos"
+              className={({ isActive }) =>
+                `flex items-center gap-2 pl-[13px] py-4 rounded transition
+                 ${isActive ? "border-l-4 border-white bg-white/10" : "hover:border-l-4 hover:bg-white/10"}`
+              }
+            >
+              <span className="material-symbols-outlined text-white text-2xl">
+                school
+              </span>
+              <span className="text-white font-extrabold">Asignar Cursos</span>
+            </NavLink>
 
             <NavLink
               to="/alumnos"
