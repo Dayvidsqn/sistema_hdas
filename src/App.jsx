@@ -5,6 +5,7 @@ import Alumnos from "./pages/Alumnos";
 import Profesor from "./pages/Profesor";
 import AsignarCursos from "./pages/AsignarCursos";
 import DashboardLayout from "./layouts/DashboardLayout";
+import MisCursos from "./pages/MisCursos";
 
 function App() {
   return (
@@ -49,6 +50,15 @@ function App() {
           element={
             <DashboardLayout>
               <Profesor />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
+          path="/profesor/mis-cursos"
+          element={
+            <DashboardLayout>
+              <MisCursos />
             </DashboardLayout>
           }
         />

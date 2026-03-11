@@ -17,6 +17,7 @@ dotenv.config();
 import authRoutes from "./routes/auth.js";
 import archivosRoutes from "./routes/archivos.js";
 import alumnosRoutes from "./routes/alumnos.js";
+import profesorRoutes from "./routes/profesor.js";
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/archivos", archivosRoutes);
 app.use("/api/alumnos", alumnosRoutes);
 app.use("/api/director", directorRoutes);
+app.use("/api/profesor", profesorRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

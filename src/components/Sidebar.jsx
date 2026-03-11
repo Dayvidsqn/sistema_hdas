@@ -27,6 +27,7 @@ function Sidebar({ rol }) {
       {/* MENÚ */}
       <nav className="flex-1 py-5 space-y-3">
         {rol?.toLowerCase().trim() === "profesor" && (
+          <>
           <NavLink
             to="/profesor"
             className={({ isActive }) =>
@@ -39,6 +40,20 @@ function Sidebar({ rol }) {
             </span>
             <span className="text-white font-extrabold">Subir Trabajos</span>
           </NavLink>
+
+          <NavLink
+            to="/mis-cursos"
+            className={({ isActive }) =>
+              `flex items-center gap-2 pl-[13px] py-4 rounded transition
+              ${isActive ? "border-l-4 border-white bg-white/10" : "hover:border-l-4 hover:bg-white/10"}`
+            }
+          >
+            <span className="material-symbols-outlined text-white text-2xl">
+              school
+            </span>
+            <span className="text-white font-extrabold">Mis Cursos</span>
+          </NavLink>
+        </>
         )}
 
         {rol?.toLowerCase().trim() === "director" && (
