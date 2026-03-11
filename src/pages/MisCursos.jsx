@@ -21,7 +21,7 @@ export default function MisCursos() {
         return;
       }
 
-      const res = await fetch(`${API}/mis-cursos`, {
+      const res = await fetch(`${API}/profesor/mis-cursos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
