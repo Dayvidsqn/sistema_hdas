@@ -63,4 +63,98 @@ router.get("/mis-cursos", verificarToken, verificarRol(["profesor"]), async (req
   }
 });
 
+// Obtener alumnos y notas de un curso específico
+router.get("/curso/:asignacionId/alumnos", verificarToken, verificarRol(["profesor"]), async (req, res) => {
+  try {
+    const { asignacionId } = req.params;
+    const { bimestre } = req.query;
+
+    // Verificar que la asignación pertenezca al profesor
+    const profesorId = await obtenerProfesorId(req.user.id);
+    
+    const asignacion = await pool.query(
+      `SELECT a.*, c.nombre as curso_nombre 
+       FROM asignaciones a
+       JOIN cursos c ON a.curso_id = c.id
+       WHERE a.id = $1 AND a.profesor_id = $2`,
+      [asignacionId, profesorId]
+    );
+
+    if (asignacion.rows.length === 0) {
+      return res.status(404).json({ message: "Curso no encontrado o no autorizado" });
+    }
+
+    // Obtener alumnos del grado y sección
+    const alumnos = await pool.query(
+      `SELECT 
+        a.id,
+        a.nombres,
+        a.apellidos,
+        n1.nota as nota_1,
+        n2.nota as nota_2,
+        n3.nota as nota_3,
+        n4.nota as nota_4
+       FROM alumnos a
+       LEFT JOIN notas n1 ON n1.alumno_id = a.id AND n1.asignacion_id = $1 AND n1.bimestre = 1
+       LEFT JOIN notas n2 ON n2.alumno_id = a.id AND n2.asignacion_id = $1 AND n2.bimestre = 2
+       LEFT JOIN notas n3 ON n3.alumno_id = a.id AND n3.asignacion_id = $1 AND n3.bimestre = 3
+       LEFT JOIN notas n4 ON n4.alumno_id = a.id AND n4.asignacion_id = $1 AND n4.bimestre = 4
+       WHERE a.grado = $2 AND a.seccion = $3
+       ORDER BY a.apellidos, a.nombres`,
+      [asignacionId, asignacion.rows[0].grado, asignacion.rows[0].seccion]
+    );
+
+    res.json({
+      curso: asignacion.rows[0],
+      alumnos: alumnos.rows
+    });
+
+  } catch (error) {
+    console.error("Error al cargar alumnos:", error);
+    res.status(500).json({ message: "Error al cargar datos" });
+  }
+});
+
+// Guardar o actualizar una nota
+router.post("/guardar-nota", verificarToken, verificarRol(["profesor"]), async (req, res) => {
+  const { alumno_id, asignacion_id, bimestre, nota } = req.body;
+
+  try {
+    // Verificar que la asignación pertenezca al profesor
+    const profesorId = await obtenerProfesorId(req.user.id);
+    
+    const asignacion = await pool.query(
+      "SELECT id FROM asignaciones WHERE id = $1 AND profesor_id = $2",
+      [asignacion_id, profesorId]
+    );
+
+    if (asignacion.rows.length === 0) {
+      return res.status(403).json({ message: "No autorizado" });
+    }
+
+    if (nota === null || nota === "") {
+      // Si la nota está vacía, eliminar el registro si existe
+      await pool.query(
+        "DELETE FROM notas WHERE alumno_id = $1 AND asignacion_id = $2 AND bimestre = $3",
+        [alumno_id, asignacion_id, bimestre]
+      );
+    } else {
+      // Insertar o actualizar nota
+      await pool.query(
+        `INSERT INTO notas (alumno_id, asignacion_id, bimestre, nota, updated_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (alumno_id, asignacion_id, bimestre) 
+         DO UPDATE SET nota = $4, updated_at = NOW()`,
+        [alumno_id, asignacion_id, bimestre, nota]
+      );
+    }
+
+    res.json({ message: "Nota guardada correctamente" });
+
+  } catch (error) {
+    console.error("Error al guardar nota:", error);
+    res.status(500).json({ message: "Error al guardar la nota" });
+  }
+});
+
 export default router;

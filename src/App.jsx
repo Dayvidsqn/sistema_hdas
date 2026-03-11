@@ -6,6 +6,7 @@ import Profesor from "./pages/Profesor";
 import AsignarCursos from "./pages/AsignarCursos";
 import DashboardLayout from "./layouts/DashboardLayout";
 import MisCursos from "./pages/MisCursos";
+import CargarNotas from "./pages/CargarNotas";
 
 function App() {
   return (
@@ -59,6 +60,15 @@ function App() {
           element={
             <DashboardLayout>
               <MisCursos />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
+          path="/curso/:asignacionId"
+          element={
+            <DashboardLayout>
+              <CargarNotas />
             </DashboardLayout>
           }
         />
