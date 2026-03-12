@@ -56,7 +56,7 @@ function App() {
         />
 
         <Route
-          path="/profesor/mis-cursos"
+          path="/mis-cursos"
           element={
             <DashboardLayout>
               <MisCursos />
