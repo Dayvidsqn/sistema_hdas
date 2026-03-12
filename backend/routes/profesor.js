@@ -141,10 +141,10 @@ router.post("/guardar-nota", verificarToken, verificarRol(["profesor"]), async (
     } else {
       // Insertar o actualizar nota
       await pool.query(
-        `INSERT INTO notas (alumno_id, asignacion_id, bimestre, nota, updated_at)
-         VALUES ($1, $2, $3, $4, NOW())
+        `INSERT INTO notas (alumno_id, asignacion_id, bimestre, nota)
+         VALUES ($1, $2, $3, $4)
          ON CONFLICT (alumno_id, asignacion_id, bimestre) 
-         DO UPDATE SET nota = $4, updated_at = NOW()`,
+         DO UPDATE SET nota = $4`,
         [alumno_id, asignacion_id, bimestre, nota]
       );
     }
