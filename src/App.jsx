@@ -56,7 +56,7 @@ function App() {
         />
 
         <Route
-          path="/mis-cursos"
+          path="/profesor/mis-cursos"
           element={
             <DashboardLayout>
               <MisCursos />
@@ -65,7 +65,7 @@ function App() {
         />
 
         <Route
-          path="/curso/:asignacionId"
+          path="/profesor/curso/:asignacionId"
           element={
             <DashboardLayout>
               <CargarNotas />
