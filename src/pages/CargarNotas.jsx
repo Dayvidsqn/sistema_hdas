@@ -8,22 +8,20 @@ export default function CargarNotas() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
-  const [bimestreActivo, setBimestreActivo] = useState(1);
   
   const API = `${import.meta.env.VITE_API_URL}`;
 
   useEffect(() => {
     cargarAlumnosYNotas();
-  }, [asignacionId, bimestreActivo]);
+  }, [asignacionId]);
 
   const cargarAlumnosYNotas = async () => {
     try {
       setCargando(true);
       const token = localStorage.getItem("token");
       
-      // Cargar información del curso y alumnos con notas
       const res = await fetch(
-        `${API}/profesor/curso/${asignacionId}/alumnos?bimestre=${bimestreActivo}`,
+        `${API}/profesor/curso/${asignacionId}/alumnos`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -35,7 +33,19 @@ export default function CargarNotas() {
 
       const data = await res.json();
       setCursoInfo(data.curso);
-      setAlumnos(data.alumnos || []);
+      
+      // Inicializar cada alumno con un objeto de notas
+      const alumnosConNotas = data.alumnos.map(alumno => ({
+        ...alumno,
+        notas: {
+          1: alumno.nota_1 || "",
+          2: alumno.nota_2 || "",
+          3: alumno.nota_3 || "",
+          4: alumno.nota_4 || ""
+        }
+      }));
+      
+      setAlumnos(alumnosConNotas);
       
     } catch (error) {
       console.error("Error:", error);
@@ -45,17 +55,23 @@ export default function CargarNotas() {
     }
   };
 
-  const handleNotaChange = (alumnoId, valor) => {
+  const handleNotaChange = (alumnoId, bimestre, valor) => {
     setAlumnos(prevAlumnos =>
       prevAlumnos.map(alumno =>
         alumno.id === alumnoId
-          ? { ...alumno, nota_actual: valor }
+          ? {
+              ...alumno,
+              notas: {
+                ...alumno.notas,
+                [bimestre]: valor
+              }
+            }
           : alumno
       )
     );
   };
 
-  const guardarNota = async (alumnoId) => {
+  const guardarNotasAlumno = async (alumnoId) => {
     const alumno = alumnos.find(a => a.id === alumnoId);
     if (!alumno) return;
 
@@ -63,47 +79,45 @@ export default function CargarNotas() {
       setGuardando(true);
       const token = localStorage.getItem("token");
       
-      const res = await fetch(`${API}/profesor/guardar-nota`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          alumno_id: alumnoId,
-          asignacion_id: parseInt(asignacionId),
-          bimestre: bimestreActivo,
-          nota: alumno.nota_actual ? parseFloat(alumno.nota_actual) : null
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error("Error al guardar nota");
+      // Guardar cada bimestre por separado
+      for (let bimestre = 1; bimestre <= 4; bimestre++) {
+        const nota = alumno.notas[bimestre];
+        
+        await fetch(`${API}/profesor/guardar-nota`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            alumno_id: alumnoId,
+            asignacion_id: parseInt(asignacionId),
+            bimestre: bimestre,
+            nota: nota ? parseFloat(nota) : null
+          })
+        });
       }
 
-      setMensaje("✅ Nota guardada correctamente");
+      setMensaje(`✅ Notas de ${alumno.apellidos} guardadas correctamente`);
       setTimeout(() => setMensaje(""), 2000);
+      
+      // Recargar para mostrar los valores guardados
+      cargarAlumnosYNotas();
       
     } catch (error) {
       console.error("Error:", error);
-      setMensaje("❌ Error al guardar la nota");
+      setMensaje("❌ Error al guardar las notas");
       setTimeout(() => setMensaje(""), 2000);
     } finally {
       setGuardando(false);
     }
   };
 
-  const calcularPromedio = (alumno) => {
-    const notas = [
-      alumno.nota_1,
-      alumno.nota_2,
-      alumno.nota_3,
-      alumno.nota_4
-    ].filter(n => n !== null && n !== undefined);
-    
-    if (notas.length === 0) return "-";
-    const suma = notas.reduce((acc, n) => acc + parseFloat(n), 0);
-    return (suma / notas.length).toFixed(2);
+  const calcularPromedio = (notas) => {
+    const valores = Object.values(notas).filter(n => n !== "");
+    if (valores.length === 0) return "-";
+    const suma = valores.reduce((acc, n) => acc + parseFloat(n), 0);
+    return (suma / valores.length).toFixed(2);
   };
 
   if (cargando) {
@@ -129,30 +143,11 @@ export default function CargarNotas() {
           <p className="text-blue-100 text-lg mt-2">
             {cursoInfo.grado} - Sección {cursoInfo.seccion} | {alumnos.length} alumnos
           </p>
+          <p className="text-blue-100 text-sm mt-1">
+            Ingrese las notas de los 4 bimestres (0 - 20)
+          </p>
         </div>
       )}
-
-      {/* Selector de bimestre */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <div className="flex items-center gap-4">
-          <label className="font-semibold text-gray-700">Bimestre:</label>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4].map(b => (
-              <button
-                key={b}
-                onClick={() => setBimestreActivo(b)}
-                className={`px-6 py-2 rounded-lg font-semibold transition ${
-                  bimestreActivo === b
-                    ? "bg-blue-700 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {b}° Bimestre
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Mensaje de notificación */}
       {mensaje && (
@@ -187,46 +182,36 @@ export default function CargarNotas() {
                     {alumno.apellidos}, {alumno.nombres}
                   </td>
                   
-                  {/* Notas de cada bimestre (solo para visualización) */}
-                  <td className="p-4 text-center">
-                    {alumno.nota_1 || "-"}
-                  </td>
-                  <td className="p-4 text-center">
-                    {alumno.nota_2 || "-"}
-                  </td>
-                  <td className="p-4 text-center">
-                    {alumno.nota_3 || "-"}
-                  </td>
-                  <td className="p-4 text-center">
-                    {alumno.nota_4 || "-"}
-                  </td>
-                  
-                  {/* Promedio */}
-                  <td className="p-4 text-center font-bold">
-                    {calcularPromedio(alumno)}
-                  </td>
-                  
-                  {/* Campo para ingresar nota del bimestre activo */}
-                  <td className="p-4 text-center">
-                    <div className="flex items-center gap-2 justify-center">
+                  {/* Inputs para los 4 bimestres */}
+                  {[1, 2, 3, 4].map(bimestre => (
+                    <td key={bimestre} className="p-4 text-center">
                       <input
                         type="number"
                         min="0"
                         max="20"
                         step="0.1"
-                        value={alumno.nota_actual || ""}
-                        onChange={(e) => handleNotaChange(alumno.id, e.target.value)}
-                        className="w-20 border border-gray-300 rounded-lg p-1 text-center"
+                        value={alumno.notas[bimestre]}
+                        onChange={(e) => handleNotaChange(alumno.id, bimestre, e.target.value)}
+                        className="w-16 border border-gray-300 rounded-lg p-1 text-center"
                         placeholder="0-20"
                       />
-                      <button
-                        onClick={() => guardarNota(alumno.id)}
-                        disabled={guardando}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm disabled:opacity-50"
-                      >
-                        Guardar
-                      </button>
-                    </div>
+                    </td>
+                  ))}
+                  
+                  {/* Promedio */}
+                  <td className="p-4 text-center font-bold">
+                    {calcularPromedio(alumno.notas)}
+                  </td>
+                  
+                  {/* Botón Guardar (uno por alumno) */}
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => guardarNotasAlumno(alumno.id)}
+                      disabled={guardando}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 transition"
+                    >
+                      {guardando ? "Guardando..." : "Guardar Notas"}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -241,6 +226,11 @@ export default function CargarNotas() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Leyenda */}
+      <div className="mt-4 text-sm text-gray-500 text-center">
+        * Las notas deben estar entre 0 y 20. Use punto para decimales (ej: 15.5)
       </div>
     </div>
   );
