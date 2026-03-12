@@ -1,9 +1,9 @@
 import { useState } from "react";
+import fondo from "../assets/fondo-login.png";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rol, setRol] = useState("");
   const [mensaje, setMensaje] = useState("");
 
   const handleSubmit = async (e) => {
@@ -12,7 +12,6 @@ function Login() {
 
     try {
       const API = `${import.meta.env.VITE_API_URL}/auth`;
-      // const API = "http://localhost:3001/api/auth";
 
       const response = await fetch(`${API}/login`, {
         method: "POST",
@@ -22,30 +21,20 @@ function Login() {
         body: JSON.stringify({
           email,
           password,
-          rol,
+          // Eliminamos 'rol' del body
         }),
       });
 
-
       const data = await response.json();
-
-      console.log("📦 Respuesta del servidor:", {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        data: data
-      });
 
       if (!response.ok) {
         setMensaje(data.message || "Error al iniciar sesión");
         return;
       }
 
-      // Guardamos token en el navegador
       localStorage.setItem("token", data.token);
       localStorage.setItem("rol", data.rol);
 
-      // Redirigir según rol
       if (data.rol === "director") {
         window.location.href = "/director";
       } else if (data.rol === "profesor") {
@@ -58,14 +47,27 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-r from-blue-600 to-sky-400">
+    <div
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{ backgroundImage: `url(${fondo})` }}
+    >
+      <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70 backdrop-blur-xs"></div>
+
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-xl shadow-xl w-full max-w-sm"
+        className="relative bg-white p-8 rounded-xl shadow-xl w-full max-w-sm"
       >
-        <h2 className="text-2xl font-bold text-center mb-2">
-          Sistema del Colegio
-        </h2>
+        <div className="flex flex-col items-center mb-4">
+          <img
+            src="/logo_das.png"
+            alt="Logo del colegio"
+            className="w-30 h-30 mb-2"
+          />
+
+          <h2 className="text-2xl font-bold text-center">
+            Mi Portal HDAS
+          </h2>
+        </div>
 
         <p className="text-center text-gray-500 mb-6">
           Iniciar sesión
@@ -85,20 +87,9 @@ function Login() {
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border border-gray-300 p-2 rounded mb-3"
-          required
-        />
-
-        <select
-          value={rol}
-          onChange={(e) => setRol(e.target.value)}
           className="w-full border border-gray-300 p-2 rounded mb-4"
           required
-        >
-          <option value="">Seleccione su rol</option>
-          <option value="profesor">Profesor</option>
-          <option value="director">Director</option>
-        </select>
+        />
 
         <button
           type="submit"
