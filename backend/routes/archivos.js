@@ -1,159 +1,103 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import pool from "../db.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/* ===========================================================
-   CONFIGURACIÓN DE MULTER
-   =========================================================== */
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Asegurar que la carpeta uploads existe
-    const uploadPath = "uploads";
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const nombre = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, nombre + ext);
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  const extensionesPermitidas = [
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"
-  ];
-
-  const ext = path.extname(file.originalname).toLowerCase();
-
-  if (extensionesPermitidas.includes(ext)) {
-    cb(null, true);
-  } else {
-    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "Tipo de archivo no permitido"));
-  }
-};
+// Configurar multer para memoria (necesario para acceder al buffer)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
 /* ===========================================================
-   SUBIR ARCHIVOS
+   SUBIR ARCHIVOS (GUARDAR EN BD COMO BYTEA)
    =========================================================== */
 
-router.post(
-  "/subir",
-  authMiddleware,
-  upload.array("archivos", 10),
-  async (req, res) => {
-    try {
-      console.log("=== DEBUG: INICIO SUBIDA ===");
-      console.log("Usuario autenticado:", req.user);
-      console.log("Body recibido:", req.body);
-      console.log("FILES RECIBIDOS:", req.files);
+router.post("/subir", authMiddleware, upload.array("archivos", 10), async (req, res) => {
+  try {
+    console.log("=== INICIO SUBIDA A BD ===");
+    const { descripcion } = req.body;
 
-      const { descripcion } = req.body;
+    if (!descripcion) {
+      return res.status(400).json({ message: "La descripción es obligatoria" });
+    }
 
-      if (!descripcion) {
-        return res.status(400).json({ message: "La descripción es obligatoria" });
-      }
+    if (req.user.rol !== "profesor") {
+      return res.status(403).json({ message: "Solo profesores pueden subir archivos" });
+    }
 
-      // Verificar que el usuario autenticado es profesor
-      if (req.user.rol !== "profesor") {
-        return res.status(403).json({ message: "Solo los profesores pueden subir archivos" });
-      }
+    // Obtener ID del profesor
+    const profesorResult = await pool.query(
+      "SELECT id, nombres, apellidos FROM profesores WHERE usuario_id = $1",
+      [req.user.id]
+    );
 
-      console.log("Buscando profesor con usuario_id:", req.user.id);
-      
-      // Obtener el ID del profesor desde la tabla profesores
-      const profesorResult = await pool.query(
-        "SELECT id, nombres, apellidos FROM profesores WHERE usuario_id = $1",
-        [req.user.id]
+    if (profesorResult.rows.length === 0) {
+      return res.status(404).json({ message: "Profesor no encontrado" });
+    }
+
+    const profesor_id = profesorResult.rows[0].id;
+    const profesor_nombre = `${profesorResult.rows[0].nombres} ${profesorResult.rows[0].apellidos}`;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No se recibieron archivos" });
+    }
+
+    const archivosSubidos = [];
+
+    for (const file of req.files) {
+      // Generar nombre único para el servidor (igual que antes)
+      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${require('path').extname(file.originalname)}`;
+
+      // Guardar en PostgreSQL: metadatos + archivo binario
+      const result = await pool.query(
+        `INSERT INTO archivos 
+        (nombre_original, nombre_servidor, tipo, descripcion, profesor_id, fecha_subida, archivo_binario)
+        VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING id, nombre_original`,
+        [
+          file.originalname,
+          uniqueName,
+          file.mimetype,
+          descripcion,
+          profesor_id,
+          file.buffer // ✅ El archivo se guarda como datos binarios
+        ]
       );
 
-      console.log("Resultado búsqueda profesor:", profesorResult.rows);
-
-      if (profesorResult.rows.length === 0) {
-        return res.status(404).json({ 
-          message: "No se encontró el perfil de profesor asociado a este usuario. Contacte al administrador." 
-        });
-      }
-
-      const profesor_id = profesorResult.rows[0].id;
-      const profesor_nombre = profesorResult.rows[0].nombres + " " + profesorResult.rows[0].apellidos;
-      
-      console.log("Profesor encontrado:", { profesor_id, profesor_nombre });
-
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: "No se recibieron archivos" });
-      }
-
-      // Insertar cada archivo
-      const archivosSubidos = [];
-      for (const file of req.files) {
-        const nombreOriginalCorregido = Buffer
-          .from(file.originalname, "latin1")
-          .toString("utf8");
-
-        console.log("Subiendo archivo:", nombreOriginalCorregido);
-
-        const result = await pool.query(
-          `INSERT INTO archivos 
-          (nombre_original, nombre_servidor, tipo, descripcion, profesor_id, fecha_subida)
-          VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, nombre_original`,
-          [
-            nombreOriginalCorregido,
-            file.filename,
-            file.mimetype,
-            descripcion,
-            profesor_id
-          ]
-        );
-
-        archivosSubidos.push(result.rows[0]);
-      }
-
-      console.log("=== DEBUG: SUBIDA EXITOSA ===");
-      
-      res.json({ 
-        message: "Archivos subidos correctamente",
-        count: req.files.length,
-        archivos: archivosSubidos,
-        profesor: profesor_nombre
-      });
-
-    } catch (error) {
-      console.error("ERROR SUBIDA COMPLETO:", error);
-      res.status(500).json({
-        message: error.message || "Error desconocido en servidor",
-        code: error.code || null
+      archivosSubidos.push({
+        id: result.rows[0].id,
+        nombre: result.rows[0].nombre_original
       });
     }
+
+    console.log("=== SUBIDA EXITOSA A BD ===");
+    res.json({ 
+      message: "Archivos subidos correctamente a la base de datos",
+      count: archivosSubidos.length,
+      archivos: archivosSubidos,
+      profesor: profesor_nombre
+    });
+
+  } catch (error) {
+    console.error("ERROR EN SUBIDA:", error);
+    res.status(500).json({ message: error.message || "Error al subir archivos" });
   }
-);
+});
 
 /* ===========================================================
-   LISTAR ARCHIVOS POR PROFESOR (RUTA PROTEGIDA)
+   LISTAR ARCHIVOS POR PROFESOR (metadatos, sin el binario)
    =========================================================== */
 
 router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
   try {
-    // Verificar que es profesor
     if (req.user.rol !== "profesor") {
       return res.status(403).json({ message: "Acceso denegado" });
     }
 
-    // Obtener ID del profesor
     const profesorResult = await pool.query(
       "SELECT id FROM profesores WHERE usuario_id = $1",
       [req.user.id]
@@ -165,6 +109,7 @@ router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
 
     const profesor_id = profesorResult.rows[0].id;
 
+    // NO seleccionamos archivo_binario para no saturar la red
     const result = await pool.query(
       `SELECT 
         id,
@@ -182,13 +127,13 @@ router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
     res.json(result.rows);
 
   } catch (error) {
-    console.error("Error al obtener archivos del profesor:", error);
+    console.error("Error:", error);
     res.status(500).json({ message: "Error al obtener archivos" });
   }
 });
 
 /* ===========================================================
-   LISTAR TODOS LOS ARCHIVOS (CON NOMBRE DEL PROFESOR)
+   LISTAR TODOS LOS ARCHIVOS (para director)
    =========================================================== */
 
 router.get("/", async (req, res) => {
@@ -212,52 +157,20 @@ router.get("/", async (req, res) => {
     res.json(result.rows);
 
   } catch (error) {
-    console.error("Error al obtener archivos:", error);
+    console.error("Error:", error);
     res.status(500).json({ message: "Error al obtener archivos" });
   }
 });
 
 /* ===========================================================
-   LISTAR ARCHIVOS POR PROFESOR (ID específico)
-   =========================================================== */
-
-router.get("/profesor/:id", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT 
-        a.id,
-        a.nombre_original,
-        a.descripcion,
-        a.fecha_subida,
-        (p.nombres || ' ' || p.apellidos) AS profesor_nombre
-       FROM archivos a
-       INNER JOIN profesores p ON p.id = a.profesor_id
-       WHERE a.profesor_id = $1
-       ORDER BY a.fecha_subida DESC`,
-      [req.params.id]
-    );
-
-    res.json(result.rows);
-
-  } catch (error) {
-    console.error("Error al obtener archivos del profesor:", error);
-    res.status(500).json({ message: "Error al obtener archivos" });
-  }
-});
-
-/* ===========================================================
-   DESCARGAR ARCHIVO POR ID (CORREGIDO)
+   DESCARGAR ARCHIVO DESDE LA BD
    =========================================================== */
 
 router.get("/descargar/:id", authMiddleware, async (req, res) => {
   try {
     const archivoId = req.params.id;
-    
-    console.log("=== DESCARGA SOLICITADA ===");
-    console.log("Archivo ID:", archivoId);
-    console.log("Usuario:", req.user.id, "Rol:", req.user.rol);
 
-    // Buscar el archivo en la base de datos
+    // Buscar el archivo incluyendo el binario
     const result = await pool.query(
       `SELECT a.*, p.usuario_id as profesor_usuario_id 
        FROM archivos a
@@ -267,32 +180,103 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      console.log("Archivo no encontrado en BD");
       return res.status(404).json({ message: "Archivo no encontrado" });
     }
 
     const archivo = result.rows[0];
-    
+
     // Verificar permisos
     if (req.user.rol === 'profesor' && archivo.profesor_usuario_id !== req.user.id) {
-      console.log("Permiso denegado");
       return res.status(403).json({ message: "No tienes permiso para descargar este archivo" });
     }
 
-    const filePath = path.resolve("uploads", archivo.nombre_servidor);
-    console.log("Ruta del archivo:", filePath);
-    
-    if (!fs.existsSync(filePath)) {
-      console.log("Archivo físico no encontrado");
-      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
+    // Verificar que el archivo tiene datos binarios
+    if (!archivo.archivo_binario) {
+      return res.status(404).json({ 
+        message: "El archivo no tiene datos binarios. Es un archivo antiguo que debe ser migrado." 
+      });
     }
+
+    // Configurar headers para la descarga
+    res.setHeader('Content-Type', archivo.tipo);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archivo.nombre_original)}"`);
     
-    // Enviar el archivo
-    res.download(filePath, archivo.nombre_original);
-    
+    // Enviar el buffer directamente
+    res.send(archivo.archivo_binario);
+
   } catch (error) {
     console.error("Error en descarga:", error);
     res.status(500).json({ message: "Error al descargar el archivo" });
+  }
+});
+
+/* ===========================================================
+   MIGRAR ARCHIVOS ANTIGUOS A LA BD (solo para archivos 9 y 10)
+   =========================================================== */
+
+router.post("/admin/migrar-archivos-antiguos", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.rol !== 'admin' && req.user.rol !== 'profesor') {
+      return res.status(403).json({ message: "No autorizado" });
+    }
+
+    const fs = require('fs');
+    const path = require('path');
+    
+    // IDs de los archivos que quieres migrar (9 y 10)
+    const idsAMigrar = [9, 10];
+    const resultados = [];
+
+    for (const id of idsAMigrar) {
+      // Buscar archivo en BD
+      const archivo = await pool.query(
+        "SELECT * FROM archivos WHERE id = $1",
+        [id]
+      );
+
+      if (archivo.rows.length === 0) {
+        resultados.push({ id, error: "Archivo no encontrado en BD" });
+        continue;
+      }
+
+      const fileData = archivo.rows[0];
+      
+      // Verificar si el archivo físico existe
+      const filePath = path.resolve("uploads", fileData.nombre_servidor);
+      
+      if (!fs.existsSync(filePath)) {
+        resultados.push({ 
+          id, 
+          nombre: fileData.nombre_original,
+          error: "Archivo físico no encontrado en uploads/" 
+        });
+        continue;
+      }
+
+      // Leer el archivo
+      const fileBuffer = fs.readFileSync(filePath);
+
+      // Actualizar la BD con los datos binarios
+      await pool.query(
+        "UPDATE archivos SET archivo_binario = $1 WHERE id = $2",
+        [fileBuffer, id]
+      );
+
+      resultados.push({ 
+        id, 
+        nombre: fileData.nombre_original,
+        exito: true 
+      });
+    }
+
+    res.json({ 
+      message: "Migración completada",
+      resultados 
+    });
+
+  } catch (error) {
+    console.error("Error en migración:", error);
+    res.status(500).json({ message: "Error al migrar archivos" });
   }
 });
 
@@ -313,8 +297,7 @@ router.use((err, req, res, next) => {
   } else if (err) {
     console.error("Error general:", err);
     return res.status(500).json({ 
-      message: "Error interno del servidor",
-      error: process.env.NODE_ENV === "development" ? err.message : undefined
+      message: "Error interno del servidor"
     });
   }
   next();
