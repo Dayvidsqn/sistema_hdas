@@ -38,7 +38,7 @@ function Login() {
       if (data.rol === "director") {
         window.location.href = "/director";
       } else if (data.rol === "profesor") {
-        window.location.href = "/profesor";
+        window.location.href = "/profesor/subir-trabajos";
       }
 
     } catch (error) {
