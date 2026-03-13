@@ -6,6 +6,16 @@ import FondoAnimado from "../components/FondoAnimado";
 function DashboardLayout({ children }) {
   const navigate = useNavigate();
   const [rol, setRol] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const rolStorage = localStorage.getItem("rol");
@@ -27,7 +37,13 @@ function DashboardLayout({ children }) {
       <div className="relative z-10 min-h-screen">
         <Sidebar rol={rol} />
 
-        <main className="ml-32 p-3 min-h-screen">
+        {/* El main se adapta: en desktop margen izquierdo fijo, en móvil padding-top para el header */}
+        <main 
+          className={`
+            min-h-screen transition-all duration-300
+            ${isMobile ? 'pt-16 p-3' : 'ml-32 p-3'}
+          `}
+        >
           {children}
         </main>
       </div>
