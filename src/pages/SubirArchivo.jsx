@@ -133,36 +133,41 @@ export default function SubirArchivo() {
    DESCARGAR ARCHIVO (CORREGIDO)
    =============================== */
 
+/* ===============================
+   DESCARGAR ARCHIVO (VERSIÓN FINAL CORREGIDA)
+   =============================== */
+
   const descargarArchivo = async (archivoId, nombreArchivo) => {
     try {
       const token = localStorage.getItem("token");
       
-      // VERIFICACIÓN 1: ¿Existe el token?
       if (!token) {
         mostrarNotificacion("error", "No hay sesión activa. Inicie sesión nuevamente.");
         return;
       }
 
-      console.log("Token encontrado, intentando descargar:", { archivoId, nombreArchivo });
+      console.log("Intentando descargar archivo ID:", archivoId);
 
-      // VERIFICACIÓN 2: Asegurar el formato correcto del header
+      // 👇 IMPORTANTE: Especificar método GET explícitamente
       const res = await fetch(`${API}/descargar/${archivoId}`, {
-        method: 'GET',
+        method: 'GET',  // ← Esto es crucial
         headers: {
-          'Authorization': `Bearer ${token}`,  // ¡Importante! Debe ser exactamente así
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log("Respuesta del servidor - Status:", res.status);
+      console.log("Estado de la respuesta:", res.status);
 
-      // VERIFICACIÓN 3: Manejar diferentes códigos de respuesta
       if (res.status === 401) {
-        mostrarNotificacion("error", "Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Error 401:", errorData);
+        mostrarNotificacion("error", "Su sesión ha expirado. Inicie sesión nuevamente.");
+        
         // Opcional: Redirigir al login después de 2 segundos
         setTimeout(() => {
           localStorage.removeItem("token");
-          window.location.href = '/login';
+          localStorage.removeItem("rol");
+          window.location.href = "/";
         }, 2000);
         return;
       }
@@ -173,11 +178,9 @@ export default function SubirArchivo() {
         return;
       }
 
-      // VERIFICACIÓN 4: Verificar que la respuesta es un archivo
+      // Verificar que la respuesta es un archivo
       const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/octet-stream")) {
-        console.warn("Tipo de contenido inesperado:", contentType);
-      }
+      console.log("Content-Type recibido:", contentType);
 
       // Obtener el blob del archivo
       const blob = await res.blob();
@@ -199,7 +202,7 @@ export default function SubirArchivo() {
       mostrarNotificacion("exito", "Archivo descargado correctamente");
       
     } catch (error) {
-      console.error("Error completo en descarga:", error);
+      console.error("Error en descarga:", error);
       mostrarNotificacion("error", "Error de conexión al descargar");
     }
   };

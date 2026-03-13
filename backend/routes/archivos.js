@@ -253,10 +253,11 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
   try {
     const archivoId = req.params.id;
     
-    console.log("Solicitud de descarga para archivo ID:", archivoId);
-    console.log("Usuario solicitante:", req.user.id, "Rol:", req.user.rol);
+    console.log("=== DESCARGA SOLICITADA ===");
+    console.log("Archivo ID:", archivoId);
+    console.log("Usuario:", req.user.id, "Rol:", req.user.rol);
 
-    // Buscar el archivo en la base de datos por ID
+    // Buscar el archivo en la base de datos
     const result = await pool.query(
       `SELECT a.*, p.usuario_id as profesor_usuario_id 
        FROM archivos a
@@ -271,40 +272,26 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
     }
 
     const archivo = result.rows[0];
-    console.log("Archivo encontrado:", archivo.nombre_original);
-
-    // Verificar permisos:
-    // - El profesor puede descargar sus propios archivos
-    // - Los administradores pueden descargar cualquier archivo
+    
+    // Verificar permisos
     if (req.user.rol === 'profesor' && archivo.profesor_usuario_id !== req.user.id) {
-      console.log("Permiso denegado: profesor intenta descargar archivo de otro profesor");
+      console.log("Permiso denegado");
       return res.status(403).json({ message: "No tienes permiso para descargar este archivo" });
     }
 
-    // Si es admin, puede descargar cualquier archivo (no necesitamos verificación adicional)
-
-    // Construir la ruta del archivo
     const filePath = path.resolve("uploads", archivo.nombre_servidor);
     console.log("Ruta del archivo:", filePath);
     
-    // Verificar si el archivo físico existe
     if (!fs.existsSync(filePath)) {
-      console.log("Archivo físico no encontrado en:", filePath);
-      return res.status(404).json({ message: "Archivo físico no encontrado en el servidor" });
+      console.log("Archivo físico no encontrado");
+      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
     }
     
-    // Enviar el archivo para descarga con el nombre original
-    res.download(filePath, archivo.nombre_original, (err) => {
-      if (err) {
-        console.error("Error durante la descarga:", err);
-        // No podemos enviar otra respuesta si ya comenzó la descarga
-      } else {
-        console.log("Descarga exitosa:", archivo.nombre_original);
-      }
-    });
+    // Enviar el archivo
+    res.download(filePath, archivo.nombre_original);
     
   } catch (error) {
-    console.error("Error al descargar archivo:", error);
+    console.error("Error en descarga:", error);
     res.status(500).json({ message: "Error al descargar el archivo" });
   }
 });
