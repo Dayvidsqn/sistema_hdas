@@ -43,6 +43,11 @@ export default function SubirArchivo() {
     setArchivos(archivos.filter((_, i) => i !== index));
   };
 
+  // Función para abrir el selector de archivos
+  const abrirSelectorArchivos = () => {
+    fileInputRef.current?.click();
+  };
+
   /* ===============================
      SUBIR ARCHIVOS
      =============================== */
@@ -126,7 +131,7 @@ export default function SubirArchivo() {
   };
 
   /* ===============================
-    DESCARGAR ARCHIVO (VERSIÓN FINAL)
+    DESCARGAR ARCHIVO
     =============================== */
 
   const descargarArchivo = async (archivoId, nombreArchivo) => {
@@ -140,7 +145,6 @@ export default function SubirArchivo() {
 
       console.log("🔍 Intentando descargar:", { archivoId, nombreArchivo });
 
-      // IMPORTANTE: Usar el ID, no el nombre_servidor
       const url = `${API}/descargar/${archivoId}`;
       console.log("📡 URL completa:", url);
 
@@ -179,24 +183,19 @@ export default function SubirArchivo() {
         return;
       }
 
-      // Verificar que la respuesta es un archivo
       const contentType = res.headers.get("content-type");
       console.log("📁 Content-Type:", contentType);
 
-      // Obtener el blob del archivo
       const blob = await res.blob();
       
-      // Crear URL del blob
       const urlBlob = window.URL.createObjectURL(blob);
       
-      // Crear elemento <a> para descargar
       const a = document.createElement('a');
       a.href = urlBlob;
       a.download = nombreArchivo;
       document.body.appendChild(a);
       a.click();
       
-      // Limpiar
       window.URL.revokeObjectURL(urlBlob);
       document.body.removeChild(a);
       
@@ -220,7 +219,7 @@ export default function SubirArchivo() {
     <div className="space-y-10 relative">
       
       {/* ============================================ */}
-      {/* NOTIFICACIÓN FLOTANTE (TOAST) */}
+      {/* NOTIFICACIÓN FLOTANTE */}
       {/* ============================================ */}
       {notificacion.mostrar && (
         <div
@@ -233,7 +232,6 @@ export default function SubirArchivo() {
           }`}
         >
           <div className="flex items-center gap-3">
-            {/* Icono según tipo */}
             <span className="material-symbols-outlined text-2xl">
               {notificacion.tipo === "exito" 
                 ? "check_circle" 
@@ -275,7 +273,7 @@ export default function SubirArchivo() {
             />
           </div>
 
-          {/* ARCHIVOS */}
+          {/* ARCHIVOS - AHORA CON BUTTON EN LUGAR DE LABEL */}
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition">
             <input
               type="file"
@@ -286,12 +284,13 @@ export default function SubirArchivo() {
               className="hidden"
               id="file-upload"
             />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow hover:bg-blue-700 transition"
+            <button
+              type="button"
+              onClick={abrirSelectorArchivos}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow hover:bg-blue-700 transition cursor-pointer"
             >
               Seleccionar Archivos
-            </label>
+            </button>
             <p className="mt-3 text-sm text-gray-500">
               PDF, Word, Excel y PowerPoint (máx. 10MB).
             </p>
@@ -324,7 +323,7 @@ export default function SubirArchivo() {
             </div>
           )}
 
-          {/* BOTÓN */}
+          {/* BOTÓN SUBIR */}
           <button
             type="submit"
             disabled={cargando}
@@ -335,7 +334,6 @@ export default function SubirArchivo() {
             {cargando ? "Subiendo..." : "Subir Archivos"}
           </button>
 
-          {/* Mensaje adicional (opcional) */}
           {mensaje && (
             <p className="font-semibold text-gray-700">{mensaje}</p>
           )}
