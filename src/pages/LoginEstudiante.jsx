@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import fondoLogin from "../assets/fondo-estudiante-login.png";
 
 export default function LoginEstudiante() {
   const [dni, setDni] = useState("");
@@ -50,13 +51,16 @@ export default function LoginEstudiante() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-600 to-sky-400">
+    <div className="flex h-screen">
 
-      {/* espacio izquierdo */}
-      <div className="flex-1 hidden md:block"></div>
+      {/* LADO IZQUIERDO IMAGEN */}
+      <div
+        className="hidden md:flex flex-1 bg-cover bg-center"
+        style={{ backgroundImage: `url(${fondoLogin})` }}
+      />
 
       {/* SIDEBAR LOGIN */}
-      <div className="w-full max-w-[420px] bg-white shadow-2xl flex flex-col justify-center px-10">
+      <div className="w-full max-w-[500px] bg-white shadow-2xl flex flex-col justify-center px-10">
 
         <div className="flex flex-col items-center mb-6">
           <img

@@ -3,6 +3,7 @@ import { getAlumnos, crearAlumno, eliminarAlumno } from "../api/alumnos";
 
 export default function Alumnos() {
   const [alumnos, setAlumnos] = useState([]);
+  const [alumnosFiltrados, setAlumnosFiltrados] = useState([]);
   const [form, setForm] = useState({
     nombres: "",
     apellidos: "",
@@ -14,16 +15,53 @@ export default function Alumnos() {
     telefono: ""
   });
 
+  // Estados para filtros
+  const [ordenGrado, setOrdenGrado] = useState("asc"); // asc = menor a mayor, desc = mayor a menor
+  const [ordenFecha, setOrdenFecha] = useState("desc"); // desc = más reciente primero
+
   const [mensaje, setMensaje] = useState(null);
   const [cargando, setCargando] = useState(false);
+
+  // Opciones para selects
+  const grados = ["1ro", "2do", "3ro", "4to", "5to", "6to"];
+  const secciones = ["A", "B", "C"];
 
   useEffect(() => {
     cargarAlumnos();
   }, []);
 
+  useEffect(() => {
+    ordenarAlumnos();
+  }, [alumnos, ordenGrado, ordenFecha]);
+
   const cargarAlumnos = async () => {
     const data = await getAlumnos();
     setAlumnos(data || []);
+  };
+
+  const ordenarAlumnos = () => {
+    let lista = [...alumnos];
+
+    // Ordenar por grado (extrayendo el número)
+    lista.sort((a, b) => {
+      const gradoA = parseInt(a.grado?.replace(/\D/g, '') || 0);
+      const gradoB = parseInt(b.grado?.replace(/\D/g, '') || 0);
+      
+      if (ordenGrado === "asc") {
+        return gradoA - gradoB;
+      } else {
+        return gradoB - gradoA;
+      }
+    });
+
+    // Luego ordenar por fecha de registro (usando ID como referencia)
+    if (ordenFecha === "desc") {
+      lista.sort((a, b) => b.id - a.id); // Más recientes primero (ID mayor)
+    } else {
+      lista.sort((a, b) => a.id - b.id); // Más antiguos primero (ID menor)
+    }
+
+    setAlumnosFiltrados(lista);
   };
 
   const manejarCambio = (e) => {
@@ -37,7 +75,6 @@ export default function Alumnos() {
       [name]: camposMayus.includes(name) ? value.toUpperCase() : value
     });
   };
-
 
   const registrarAlumno = async (e) => {
     e.preventDefault();
@@ -170,30 +207,38 @@ export default function Alumnos() {
             />
           </div>
 
-          {/* Grado */}
+          {/* Grado - SELECTOR */}
           <div>
-            <label className="font-semibold text-gray-700">Grado</label>
-            <input
-              type="text"
+            <label className="font-semibold text-gray-700">Grado *</label>
+            <select
               name="grado"
               value={form.grado}
               onChange={manejarCambio}
-              className="w-full p-3 border rounded-xl mt-1"
-              placeholder="Ej: 5to"
-            />
+              className="w-full p-3 border rounded-xl mt-1 bg-white"
+              required
+            >
+              <option value="">Seleccionar grado</option>
+              {grados.map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Sección */}
+          {/* Sección - SELECTOR */}
           <div>
-            <label className="font-semibold text-gray-700">Sección</label>
-            <input
-              type="text"
+            <label className="font-semibold text-gray-700">Sección *</label>
+            <select
               name="seccion"
               value={form.seccion}
               onChange={manejarCambio}
-              className="w-full p-3 border rounded-xl mt-1"
-              placeholder="Ej: A"
-            />
+              className="w-full p-3 border rounded-xl mt-1 bg-white"
+              required
+            >
+              <option value="">Seleccionar sección</option>
+              {secciones.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           {/* Fecha de nacimiento */}
@@ -249,12 +294,41 @@ export default function Alumnos() {
         </form>
       </div>
 
-      {/* LISTA */}
+      {/* LISTA CON FILTROS */}
       <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-700">
-          <span className="material-symbols-outlined">group</span>
-          Lista de Alumnos
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-gray-700">
+            <span className="material-symbols-outlined">group</span>
+            Lista de Alumnos
+          </h2>
+
+          {/* FILTROS DE ORDENAMIENTO */}
+          <div className="flex gap-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mr-2">Ordenar por grado:</label>
+              <select
+                value={ordenGrado}
+                onChange={(e) => setOrdenGrado(e.target.value)}
+                className="border rounded-lg p-2 bg-white"
+              >
+                <option value="asc">Menor a Mayor (1ro → 6to)</option>
+                <option value="desc">Mayor a Menor (6to → 1ro)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-600 mr-2">Ordenar por fecha:</label>
+              <select
+                value={ordenFecha}
+                onChange={(e) => setOrdenFecha(e.target.value)}
+                className="border rounded-lg p-2 bg-white"
+              >
+                <option value="desc">Más recientes primero</option>
+                <option value="asc">Más antiguos primero</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full text-left border-collapse">
@@ -273,7 +347,7 @@ export default function Alumnos() {
             </thead>
 
             <tbody>
-              {alumnos.map((a) => (
+              {alumnosFiltrados.map((a) => (
                 <tr key={a.id} className="border-b hover:bg-blue-50 transition">
                   <td className="p-4">{a.id}</td>
                   <td className="p-4">{a.nombres} {a.apellidos}</td>
@@ -294,7 +368,7 @@ export default function Alumnos() {
                 </tr>
               ))}
 
-              {alumnos.length === 0 && (
+              {alumnosFiltrados.length === 0 && (
                 <tr>
                   <td colSpan="9" className="p-8 text-center text-gray-500">
                     No hay alumnos registrados.
@@ -304,6 +378,11 @@ export default function Alumnos() {
             </tbody>
 
           </table>
+        </div>
+
+        {/* Contador de alumnos */}
+        <div className="mt-4 text-sm text-gray-500 text-right">
+          Total de alumnos: {alumnosFiltrados.length}
         </div>
       </div>
 
