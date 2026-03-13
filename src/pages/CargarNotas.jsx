@@ -8,8 +8,19 @@ export default function CargarNotas() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   const API = `${import.meta.env.VITE_API_URL}`;
+
+  // Detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     cargarAlumnosYNotas();
@@ -122,7 +133,7 @@ export default function CargarNotas() {
 
   if (cargando) {
     return (
-      <div className="ml-32 p-6 flex justify-center items-center h-64">
+      <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} flex justify-center items-center h-64`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando alumnos...</p>
@@ -132,59 +143,62 @@ export default function CargarNotas() {
   }
 
   return (
-    <div className="ml-32 p-6 min-h-screen">
-      {/* Header con información del curso */}
+    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} min-h-screen`}>
+      {/* Header con información del curso - Responsive */}
       {cursoInfo && (
-        <div className="bg-linear-to-r from-blue-700 to-blue-600 rounded-2xl shadow-xl p-8 text-white mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <span className="material-symbols-outlined text-4xl!">edit_note</span>
-            {cursoInfo.curso_nombre}
+        <div className="bg-gradient-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-8 text-white mb-4 md:mb-8">
+          <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2 md:gap-3">
+            <span className="material-symbols-outlined text-2xl md:text-4xl">edit_note</span>
+            <span className="truncate">{cursoInfo.curso_nombre}</span>
           </h1>
-          <p className="text-blue-100 text-lg mt-2">
+          <p className="text-blue-100 text-sm md:text-lg mt-1 md:mt-2">
             {cursoInfo.grado} - Sección {cursoInfo.seccion} | {alumnos.length} alumnos
           </p>
-          <p className="text-blue-100 text-sm mt-1">
+          <p className="text-blue-100 text-xs md:text-sm mt-1">
             Ingrese las notas de los 4 bimestres (0 - 20)
           </p>
         </div>
       )}
 
-      {/* Mensaje de notificación */}
+      {/* Mensaje de notificación - Responsive */}
       {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${
+        <div className={`mb-4 md:mb-6 p-3 md:p-4 rounded-lg text-sm md:text-base ${
           mensaje.includes("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
         }`}>
           {mensaje}
         </div>
       )}
 
-      {/* Tabla de alumnos */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+      {/* Tabla de alumnos - Responsive con scroll horizontal */}
+      <div className="bg-white rounded-lg md:rounded-xl shadow-lg p-3 md:p-6">
+        <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
+          <table className="min-w-[800px] md:min-w-full w-full border-collapse">
             <thead className="bg-blue-700 text-white">
               <tr>
-                <th className="p-4 text-left">N°</th>
-                <th className="p-4 text-left">Apellidos y Nombres</th>
-                <th className="p-4 text-center">1° Bim</th>
-                <th className="p-4 text-center">2° Bim</th>
-                <th className="p-4 text-center">3° Bim</th>
-                <th className="p-4 text-center">4° Bim</th>
-                <th className="p-4 text-center">Promedio</th>
-                <th className="p-4 text-center">Acción</th>
+                <th className="p-2 md:p-4 text-left text-xs md:text-base">N°</th>
+                <th className="p-2 md:p-4 text-left text-xs md:text-base">Alumno</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">1°</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">2°</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">3°</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">4°</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">Prom</th>
+                <th className="p-2 md:p-4 text-center text-xs md:text-base">Acción</th>
               </tr>
             </thead>
             <tbody>
               {alumnos.map((alumno, index) => (
                 <tr key={alumno.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4">{index + 1}</td>
-                  <td className="p-4 font-medium">
-                    {alumno.apellidos}, {alumno.nombres}
+                  <td className="p-2 md:p-4 text-xs md:text-base">{index + 1}</td>
+                  <td className="p-2 md:p-4 font-medium text-xs md:text-base">
+                    {isMobile 
+                      ? `${alumno.apellidos.split(' ')[0]} ${alumno.nombres.split(' ')[0]}`
+                      : `${alumno.apellidos}, ${alumno.nombres}`
+                    }
                   </td>
                   
-                  {/* Inputs para los 4 bimestres */}
+                  {/* Inputs para los 4 bimestres - Responsive */}
                   {[1, 2, 3, 4].map(bimestre => (
-                    <td key={bimestre} className="p-4 text-center">
+                    <td key={bimestre} className="p-1 md:p-4 text-center">
                       <input
                         type="number"
                         min="0"
@@ -192,25 +206,25 @@ export default function CargarNotas() {
                         step="0.1"
                         value={alumno.notas[bimestre]}
                         onChange={(e) => handleNotaChange(alumno.id, bimestre, e.target.value)}
-                        className="w-16 border border-gray-300 rounded-lg p-1 text-center"
+                        className="w-12 md:w-16 border border-gray-300 rounded-lg p-0.5 md:p-1 text-center text-xs md:text-sm"
                         placeholder="0-20"
                       />
                     </td>
                   ))}
                   
-                  {/* Promedio */}
-                  <td className="p-4 text-center font-bold">
+                  {/* Promedio - Responsive */}
+                  <td className="p-2 md:p-4 text-center font-bold text-xs md:text-base">
                     {calcularPromedio(alumno.notas)}
                   </td>
                   
-                  {/* Botón Guardar (uno por alumno) */}
-                  <td className="p-4 text-center">
+                  {/* Botón Guardar - Responsive */}
+                  <td className="p-2 md:p-4 text-center">
                     <button
                       onClick={() => guardarNotasAlumno(alumno.id)}
                       disabled={guardando}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 transition"
+                      className="bg-green-600 hover:bg-green-700 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg font-semibold text-xs md:text-sm disabled:opacity-50 transition whitespace-nowrap"
                     >
-                      {guardando ? "Guardando..." : "Guardar Notas"}
+                      {guardando ? "..." : isMobile ? "Guardar" : "Guardar Notas"}
                     </button>
                   </td>
                 </tr>
@@ -218,7 +232,7 @@ export default function CargarNotas() {
 
               {alumnos.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-gray-500">
+                  <td colSpan="8" className="p-4 md:p-8 text-center text-gray-500 text-sm md:text-base">
                     No hay alumnos en este curso
                   </td>
                 </tr>
@@ -228,8 +242,8 @@ export default function CargarNotas() {
         </div>
       </div>
 
-      {/* Leyenda */}
-      <div className="mt-4 text-sm text-gray-500 text-center">
+      {/* Leyenda - Responsive */}
+      <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-500 text-center px-2">
         * Las notas deben estar entre 0 y 20. Use punto para decimales (ej: 15.5)
       </div>
     </div>
