@@ -126,16 +126,8 @@ export default function SubirArchivo() {
   };
 
   /* ===============================
-     DESCARGAR ARCHIVO (CORREGIDO)
-     =============================== */
-
-/* ===============================
-   DESCARGAR ARCHIVO (CORREGIDO)
-   =============================== */
-
-/* ===============================
-   DESCARGAR ARCHIVO (VERSIÓN FINAL CORREGIDA)
-   =============================== */
+    DESCARGAR ARCHIVO (VERSIÓN FINAL)
+    =============================== */
 
   const descargarArchivo = async (archivoId, nombreArchivo) => {
     try {
@@ -146,24 +138,23 @@ export default function SubirArchivo() {
         return;
       }
 
-      console.log("Intentando descargar archivo ID:", archivoId);
+      console.log("🔍 Intentando descargar:", { archivoId, nombreArchivo });
 
-      // 👇 IMPORTANTE: Especificar método GET explícitamente
-      const res = await fetch(`${API}/descargar/${archivoId}`, {
-        method: 'GET',  // ← Esto es crucial
+      // IMPORTANTE: Usar el ID, no el nombre_servidor
+      const url = `${API}/descargar/${archivoId}`;
+      console.log("📡 URL completa:", url);
+
+      const res = await fetch(url, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log("Estado de la respuesta:", res.status);
+      console.log("📊 Status de respuesta:", res.status);
 
       if (res.status === 401) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Error 401:", errorData);
-        mostrarNotificacion("error", "Su sesión ha expirado. Inicie sesión nuevamente.");
-        
-        // Opcional: Redirigir al login después de 2 segundos
+        mostrarNotificacion("error", "Sesión expirada. Inicie sesión nuevamente.");
         setTimeout(() => {
           localStorage.removeItem("token");
           localStorage.removeItem("rol");
@@ -172,37 +163,47 @@ export default function SubirArchivo() {
         return;
       }
 
-      if (!res.ok) {
+      if (res.status === 403) {
+        mostrarNotificacion("error", "No tiene permiso para descargar este archivo");
+        return;
+      }
+
+      if (res.status === 404) {
         const errorData = await res.json().catch(() => ({}));
-        mostrarNotificacion("error", errorData.message || "Error al descargar el archivo");
+        mostrarNotificacion("error", errorData.message || "Archivo no encontrado");
+        return;
+      }
+
+      if (!res.ok) {
+        mostrarNotificacion("error", "Error al descargar el archivo");
         return;
       }
 
       // Verificar que la respuesta es un archivo
       const contentType = res.headers.get("content-type");
-      console.log("Content-Type recibido:", contentType);
+      console.log("📁 Content-Type:", contentType);
 
       // Obtener el blob del archivo
       const blob = await res.blob();
       
       // Crear URL del blob
-      const url = window.URL.createObjectURL(blob);
+      const urlBlob = window.URL.createObjectURL(blob);
       
       // Crear elemento <a> para descargar
       const a = document.createElement('a');
-      a.href = url;
+      a.href = urlBlob;
       a.download = nombreArchivo;
       document.body.appendChild(a);
       a.click();
       
       // Limpiar
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(urlBlob);
       document.body.removeChild(a);
       
-      mostrarNotificacion("exito", "Archivo descargado correctamente");
+      mostrarNotificacion("exito", "✅ Archivo descargado correctamente");
       
     } catch (error) {
-      console.error("Error en descarga:", error);
+      console.error("🔥 Error en descarga:", error);
       mostrarNotificacion("error", "Error de conexión al descargar");
     }
   };
