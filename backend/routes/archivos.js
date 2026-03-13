@@ -1,11 +1,13 @@
 import express from "express";
 import multer from "multer";
+import path from "path"; // ✅ IMPORTACIÓN CORRECTA
+import fs from "fs"; // ✅ IMPORTACIÓN CORRECTA
 import pool from "../db.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Configurar multer para memoria (necesario para acceder al buffer)
+// Configurar multer para memoria
 const storage = multer.memoryStorage();
 
 const upload = multer({
@@ -50,8 +52,9 @@ router.post("/subir", authMiddleware, upload.array("archivos", 10), async (req, 
     const archivosSubidos = [];
 
     for (const file of req.files) {
-      // Generar nombre único para el servidor (igual que antes)
-      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${require('path').extname(file.originalname)}`;
+      // ✅ CORREGIDO: usar path.extname (sin require)
+      const ext = path.extname(file.originalname);
+      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
 
       // Guardar en PostgreSQL: metadatos + archivo binario
       const result = await pool.query(
@@ -64,7 +67,7 @@ router.post("/subir", authMiddleware, upload.array("archivos", 10), async (req, 
           file.mimetype,
           descripcion,
           profesor_id,
-          file.buffer // ✅ El archivo se guarda como datos binarios
+          file.buffer
         ]
       );
 
@@ -84,12 +87,14 @@ router.post("/subir", authMiddleware, upload.array("archivos", 10), async (req, 
 
   } catch (error) {
     console.error("ERROR EN SUBIDA:", error);
-    res.status(500).json({ message: error.message || "Error al subir archivos" });
+    res.status(500).json({ 
+      message: error.message || "Error al subir archivos"
+    });
   }
 });
 
 /* ===========================================================
-   LISTAR ARCHIVOS POR PROFESOR (metadatos, sin el binario)
+   LISTAR ARCHIVOS POR PROFESOR
    =========================================================== */
 
 router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
@@ -109,7 +114,6 @@ router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
 
     const profesor_id = profesorResult.rows[0].id;
 
-    // NO seleccionamos archivo_binario para no saturar la red
     const result = await pool.query(
       `SELECT 
         id,
@@ -170,7 +174,6 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
   try {
     const archivoId = req.params.id;
 
-    // Buscar el archivo incluyendo el binario
     const result = await pool.query(
       `SELECT a.*, p.usuario_id as profesor_usuario_id 
        FROM archivos a
@@ -190,18 +193,15 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "No tienes permiso para descargar este archivo" });
     }
 
-    // Verificar que el archivo tiene datos binarios
     if (!archivo.archivo_binario) {
       return res.status(404).json({ 
         message: "El archivo no tiene datos binarios. Es un archivo antiguo que debe ser migrado." 
       });
     }
 
-    // Configurar headers para la descarga
     res.setHeader('Content-Type', archivo.tipo);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archivo.nombre_original)}"`);
     
-    // Enviar el buffer directamente
     res.send(archivo.archivo_binario);
 
   } catch (error) {
@@ -211,7 +211,7 @@ router.get("/descargar/:id", authMiddleware, async (req, res) => {
 });
 
 /* ===========================================================
-   MIGRAR ARCHIVOS ANTIGUOS A LA BD (solo para archivos 9 y 10)
+   MIGRAR ARCHIVOS ANTIGUOS (9 y 10)
    =========================================================== */
 
 router.post("/admin/migrar-archivos-antiguos", authMiddleware, async (req, res) => {
@@ -220,15 +220,11 @@ router.post("/admin/migrar-archivos-antiguos", authMiddleware, async (req, res) 
       return res.status(403).json({ message: "No autorizado" });
     }
 
-    const fs = require('fs');
-    const path = require('path');
-    
-    // IDs de los archivos que quieres migrar (9 y 10)
+    // IDs de los archivos que quieres migrar
     const idsAMigrar = [9, 10];
     const resultados = [];
 
     for (const id of idsAMigrar) {
-      // Buscar archivo en BD
       const archivo = await pool.query(
         "SELECT * FROM archivos WHERE id = $1",
         [id]
@@ -241,7 +237,7 @@ router.post("/admin/migrar-archivos-antiguos", authMiddleware, async (req, res) 
 
       const fileData = archivo.rows[0];
       
-      // Verificar si el archivo físico existe
+      // ✅ Usar path.resolve correctamente
       const filePath = path.resolve("uploads", fileData.nombre_servidor);
       
       if (!fs.existsSync(filePath)) {
@@ -253,10 +249,8 @@ router.post("/admin/migrar-archivos-antiguos", authMiddleware, async (req, res) 
         continue;
       }
 
-      // Leer el archivo
       const fileBuffer = fs.readFileSync(filePath);
 
-      // Actualizar la BD con los datos binarios
       await pool.query(
         "UPDATE archivos SET archivo_binario = $1 WHERE id = $2",
         [fileBuffer, id]
