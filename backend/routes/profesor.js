@@ -64,7 +64,7 @@ router.get("/mis-cursos", verificarToken, verificarRol(["profesor"]), async (req
 });
 
 // Obtener alumnos y notas de un curso específico
-router.get("/curso/:asignacionId/alumnos", verificarToken, verificarRol(["profesor"]), async (req, res) => {
+router.get("/mis-cursos/:asignacionId/alumnos", verificarToken, verificarRol(["profesor"]), async (req, res) => {
   try {
     const { asignacionId } = req.params;
     const { bimestre } = req.query;
