@@ -65,7 +65,7 @@ function Login() {
           />
 
           <h2 className="text-2xl font-bold text-center">
-            Mi Portal HDAS
+            Portal Docente HDAS
           </h2>
         </div>
 
@@ -103,6 +103,9 @@ function Login() {
             {mensaje}
           </p>
         )}
+        <p className="text-center mt-4 text-sm text-gray-500">
+          <a href="/login-estudiante" className="text-blue-600 hover:underline">¿Eres estudiante? Inicia sesión aquí</a>
+        </p>
       </form>
     </div>
   );
