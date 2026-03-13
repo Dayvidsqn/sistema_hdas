@@ -61,7 +61,7 @@ function App() {
         />
 
         <Route
-          path="/mis-cursos"
+          path="/profesor/mis-cursos"
           element={
             <DashboardLayout>
               <MisCursos />
@@ -83,7 +83,7 @@ function App() {
           path="/estudiante/mis-notas"
           element={<MisNotas />} // ✅ SIN DashboardLayout
         />
-        
+
         {/* Ruta por defecto para cualquier otra URL no encontrada */}
         <Route path="*" element={<div className="p-8 text-center">404 - Página no encontrada</div>} />
 
