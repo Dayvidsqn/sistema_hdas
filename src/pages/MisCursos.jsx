@@ -74,7 +74,7 @@ export default function MisCursos() {
         {cursos.map((curso) => (
           <Link
             key={curso.id}
-            to={`/profesor/curso/${curso.id}`}
+            to={`/profesor/mis-cursos/${curso.id}`}
             className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-200"
           >
             {/* Cabecera de la tarjeta con color según el grado */}

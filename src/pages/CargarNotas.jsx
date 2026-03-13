@@ -21,7 +21,7 @@ export default function CargarNotas() {
       const token = localStorage.getItem("token");
       
       const res = await fetch(
-        `${API}/profesor/curso/${asignacionId}/alumnos`,
+        `${API}/profesor/mis-cursos/${asignacionId}/alumnos`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

@@ -70,7 +70,7 @@ function App() {
         />
 
         <Route
-          path="/profesor/curso/:asignacionId"
+          path="/profesor/mis-cursos/:asignacionId"
           element={
             <DashboardLayout>
               <CargarNotas />
