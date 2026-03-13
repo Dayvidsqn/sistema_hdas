@@ -41,7 +41,7 @@ function Sidebar({ rol }) {
   // Header superior SOLO para móvil
   const MobileHeader = () => (
     <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 px-4 py-2 flex items-center justify-between shadow-md">
-      <img src="/logo-das.png" alt="Logo DAS" className="h-10 w-auto" />
+      <img src="/logo-das.png" alt="Logo DAS" style="width: 230px; height: 70px; transition: none;"/>
       <button
         onClick={toggleMobileMenu}
         className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
