@@ -129,20 +129,54 @@ export default function SubirArchivo() {
      DESCARGAR ARCHIVO (CORREGIDO)
      =============================== */
 
+/* ===============================
+   DESCARGAR ARCHIVO (CORREGIDO)
+   =============================== */
+
   const descargarArchivo = async (archivoId, nombreArchivo) => {
     try {
       const token = localStorage.getItem("token");
+      
+      // VERIFICACIÓN 1: ¿Existe el token?
+      if (!token) {
+        mostrarNotificacion("error", "No hay sesión activa. Inicie sesión nuevamente.");
+        return;
+      }
 
+      console.log("Token encontrado, intentando descargar:", { archivoId, nombreArchivo });
+
+      // VERIFICACIÓN 2: Asegurar el formato correcto del header
       const res = await fetch(`${API}/descargar/${archivoId}`, {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,  // ¡Importante! Debe ser exactamente así
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log("Respuesta del servidor - Status:", res.status);
+
+      // VERIFICACIÓN 3: Manejar diferentes códigos de respuesta
+      if (res.status === 401) {
+        mostrarNotificacion("error", "Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        // Opcional: Redirigir al login después de 2 segundos
+        setTimeout(() => {
+          localStorage.removeItem("token");
+          window.location.href = '/login';
+        }, 2000);
+        return;
+      }
+
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         mostrarNotificacion("error", errorData.message || "Error al descargar el archivo");
         return;
+      }
+
+      // VERIFICACIÓN 4: Verificar que la respuesta es un archivo
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/octet-stream")) {
+        console.warn("Tipo de contenido inesperado:", contentType);
       }
 
       // Obtener el blob del archivo
@@ -165,7 +199,7 @@ export default function SubirArchivo() {
       mostrarNotificacion("exito", "Archivo descargado correctamente");
       
     } catch (error) {
-      console.error("Error en descarga:", error);
+      console.error("Error completo en descarga:", error);
       mostrarNotificacion("error", "Error de conexión al descargar");
     }
   };
