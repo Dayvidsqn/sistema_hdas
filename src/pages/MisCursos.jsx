@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function MisCursos() {
   const [cursos, setCursos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState(""); // Cambié mensaje por error para ser más específico
 
   const API = `${import.meta.env.VITE_API_URL}`;
 
@@ -16,7 +16,7 @@ export default function MisCursos() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setMensaje("No hay sesión activa");
+        setError("No hay sesión activa");
         setCargando(false);
         return;
       }
@@ -25,15 +25,33 @@ export default function MisCursos() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Error al cargar cursos");
+        // Si el error es porque no hay cursos, mostrar array vacío
+        if (res.status === 404 || data.message?.toLowerCase().includes("no hay cursos")) {
+          setCursos([]);
+          setError(""); // Limpiar cualquier error
+        } else {
+          setError(data.message || "Error al cargar los cursos");
+        }
+        setCargando(false);
+        return;
       }
 
-      const data = await res.json();
-      setCursos(Array.isArray(data) ? data : []);
+      // Si la respuesta es exitosa pero viene vacía
+      if (!data || data.length === 0) {
+        setCursos([]);
+        setError(""); // ✅ IMPORTANTE: Limpiar el error cuando no hay cursos
+      } else {
+        setCursos(Array.isArray(data) ? data : []);
+        setError(""); // Limpiar error si hay cursos
+      }
+
     } catch (error) {
       console.error("Error:", error);
-      setMensaje("Error al cargar los cursos");
+      setError("Error de conexión con el servidor");
+      setCursos([]);
     } finally {
       setCargando(false);
     }
@@ -63,9 +81,13 @@ export default function MisCursos() {
         </p>
       </div>
 
-      {mensaje && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded">
-          <p>{mensaje}</p>
+      {/* Mostrar errores SOLO si hay error Y no es el caso de "no hay cursos" */}
+      {error && cursos.length === 0 && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+          <p className="flex items-center gap-2">
+            <span className="material-symbols-outlined">error</span>
+            {error}
+          </p>
         </div>
       )}
 
@@ -132,7 +154,7 @@ export default function MisCursos() {
             </Link>
           ))
         ) : (
-          /* ✅ MENSAJE CUANDO NO HAY CURSOS */
+          /* ✅ MENSAJE CUANDO NO HAY CURSOS (sin error) */
           <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200">
             <span className="material-symbols-outlined text-7xl text-gray-300 mb-4">
               school
