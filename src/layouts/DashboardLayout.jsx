@@ -18,17 +18,16 @@ function DashboardLayout({ children }) {
     }
   }, []);
 
-  if (!rol) return null;
+  if (!rol) return null; // evita render mientras valida sesión
 
   return (
     <div className="relative min-h-screen overflow-hidden">
       <FondoAnimado />
 
-      <div className="relative z-10 min-h-screen flex">
+      <div className="relative z-10 min-h-screen">
         <Sidebar rol={rol} />
 
-        {/* Contenido principal con padding superior en móvil para la barra */}
-        <main className="flex-1 p-3 pt-20 md:pt-3 md:ml-0 min-h-screen">
+        <main className="ml-32 p-3 min-h-screen">
           {children}
         </main>
       </div>
