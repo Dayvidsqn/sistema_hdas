@@ -7,6 +7,8 @@ import AsignarCursos from "./pages/AsignarCursos";
 import DashboardLayout from "./layouts/DashboardLayout";
 import MisCursos from "./pages/MisCursos";
 import CargarNotas from "./pages/CargarNotas";
+import LoginEstudiante from "./pages/LoginEstudiante";
+import MisNotas from "./pages/MisNotas";
 
 function App() {
   return (
@@ -15,6 +17,9 @@ function App() {
 
         {/* LOGIN */}
         <Route path="/" element={<Login />} />
+
+        {/* LOGIN PARA ESTUDIANTES */}
+        <Route path="/login-estudiante" element={<LoginEstudiante />} />
 
         {/* DIRECTOR */}
         <Route
@@ -72,6 +77,15 @@ function App() {
             </DashboardLayout>
           }
         />
+
+        {/* ESTUDIANTE - Ver Mis Notas */}
+        <Route
+          path="/estudiante/mis-notas"
+          element={<MisNotas />} // ✅ SIN DashboardLayout
+        />
+        
+        {/* Ruta por defecto para cualquier otra URL no encontrada */}
+        <Route path="*" element={<div className="p-8 text-center">404 - Página no encontrada</div>} />
 
       </Routes>
     </BrowserRouter>
