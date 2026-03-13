@@ -29,7 +29,7 @@ function Sidebar({ rol }) {
         {rol?.toLowerCase().trim() === "profesor" && (
           <>
           <NavLink
-            to="/profesor"
+            to="/profesor/subir-trabajos"
             className={({ isActive }) =>
               `flex items-center gap-2 pl-[13px] py-4 rounded transition
                ${isActive ? "border-l-4 border-white bg-white/10" : "hover:border-l-4 hover:bg-white/10"}`

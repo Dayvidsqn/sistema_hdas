@@ -6,11 +6,23 @@ export default function SubirArchivo() {
   const [mensaje, setMensaje] = useState("");
   const [historial, setHistorial] = useState([]);
   const [cargando, setCargando] = useState(false);
+  
+  // Estados para notificaciones
+  const [notificacion, setNotificacion] = useState({ mostrar: false, tipo: "", texto: "" });
 
   const fileInputRef = useRef(null);
   
-  // ✅ CORREGIDO: Agregamos /api a la URL base
   const API = `${import.meta.env.VITE_API_URL}/archivos`;
+
+  // Función para mostrar notificaciones
+  const mostrarNotificacion = (tipo, texto) => {
+    setNotificacion({ mostrar: true, tipo, texto });
+    
+    // Ocultar después de 3 segundos
+    setTimeout(() => {
+      setNotificacion({ mostrar: false, tipo: "", texto: "" });
+    }, 3000);
+  };
 
   /* ===============================
      MANEJO DE ARCHIVOS
@@ -20,6 +32,11 @@ export default function SubirArchivo() {
     const nuevos = Array.from(e.target.files);
     setArchivos((prev) => [...prev, ...nuevos]);
     e.target.value = null;
+    
+    // Notificación de archivos seleccionados
+    if (nuevos.length > 0) {
+      mostrarNotificacion("info", `${nuevos.length} archivo(s) seleccionado(s)`);
+    }
   };
 
   const eliminarArchivo = (index) => {
@@ -34,12 +51,12 @@ export default function SubirArchivo() {
     e.preventDefault();
 
     if (!descripcion) {
-      setMensaje("Debe ingresar una descripción");
+      mostrarNotificacion("error", "Debe ingresar una descripción");
       return;
     }
 
     if (archivos.length === 0) {
-      setMensaje("Debe seleccionar al menos un archivo");
+      mostrarNotificacion("error", "Debe seleccionar al menos un archivo");
       return;
     }
 
@@ -53,7 +70,6 @@ export default function SubirArchivo() {
 
       const token = localStorage.getItem("token");
 
-      // ✅ Esta URL ahora será: VITE_API_URL/api/archivos/subir
       const res = await fetch(`${API}/subir`, {
         method: "POST",
         headers: {
@@ -65,12 +81,14 @@ export default function SubirArchivo() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMensaje(data.message || "Error al subir archivos");
+        mostrarNotificacion("error", data.message || "Error al subir archivos");
         setCargando(false);
         return;
       }
 
-      setMensaje("Archivos subidos correctamente");
+      // ✅ NOTIFICACIÓN DE ÉXITO
+      mostrarNotificacion("exito", `✅ ${archivos.length} archivo(s) subido(s) correctamente`);
+      
       setDescripcion("");
       setArchivos([]);
       if (fileInputRef.current) fileInputRef.current.value = null;
@@ -78,7 +96,7 @@ export default function SubirArchivo() {
       cargarHistorial();
 
     } catch (error) {
-      setMensaje("Error de conexión con el servidor");
+      mostrarNotificacion("error", "Error de conexión con el servidor");
     }
 
     setCargando(false);
@@ -92,7 +110,6 @@ export default function SubirArchivo() {
     try {
       const token = localStorage.getItem("token");
 
-      // ✅ Esta URL ahora será: VITE_API_URL/api/archivos/profesor/mis-archivos
       const res = await fetch(`${API}/profesor/mis-archivos`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -101,7 +118,6 @@ export default function SubirArchivo() {
 
       const data = await res.json();
       
-      // ✅ Seguridad: si data no es array, asignamos array vacío
       setHistorial(Array.isArray(data) ? data : []);
 
     } catch {
@@ -118,7 +134,34 @@ export default function SubirArchivo() {
      =============================== */
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 relative">
+      
+      {/* ============================================ */}
+      {/* NOTIFICACIÓN FLOTANTE (TOAST) */}
+      {/* ============================================ */}
+      {notificacion.mostrar && (
+        <div
+          className={`fixed top-5 right-5 z-50 p-4 rounded-lg shadow-2xl border-l-4 transition-all duration-500 transform animate-slide-in ${
+            notificacion.tipo === "exito"
+              ? "bg-green-100 border-green-600 text-green-800"
+              : notificacion.tipo === "error"
+              ? "bg-red-100 border-red-600 text-red-800"
+              : "bg-blue-100 border-blue-600 text-blue-800"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {/* Icono según tipo */}
+            <span className="material-symbols-outlined text-2xl">
+              {notificacion.tipo === "exito" 
+                ? "check_circle" 
+                : notificacion.tipo === "error" 
+                ? "error" 
+                : "info"}
+            </span>
+            <p className="font-semibold">{notificacion.texto}</p>
+          </div>
+        </div>
+      )}
 
       {/* HEADER */}
       <div className="bg-linear-to-r from-blue-700 to-blue-600 rounded-2xl shadow-xl p-10 text-white">
@@ -209,6 +252,7 @@ export default function SubirArchivo() {
             {cargando ? "Subiendo..." : "Subir Archivos"}
           </button>
 
+          {/* Mensaje adicional (opcional) */}
           {mensaje && (
             <p className="font-semibold text-gray-700">{mensaje}</p>
           )}

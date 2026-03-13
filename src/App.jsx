@@ -52,7 +52,7 @@ function App() {
 
         {/* PROFESOR */}
         <Route
-          path="/profesor"
+          path="/profesor/subir-trabajos"
           element={
             <DashboardLayout>
               <Profesor />
