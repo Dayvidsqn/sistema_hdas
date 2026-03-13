@@ -125,6 +125,49 @@ export default function SubirArchivo() {
     }
   };
 
+  /* ===============================
+     DESCARGAR ARCHIVO
+     =============================== */
+
+  const descargarArchivo = async (archivoId, nombreArchivo) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API}/descargar/${archivoId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        mostrarNotificacion("error", "Error al descargar el archivo");
+        return;
+      }
+
+      // Obtener el blob del archivo
+      const blob = await res.blob();
+      
+      // Crear URL del blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Crear elemento <a> para descargar
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpiar
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      mostrarNotificacion("exito", "Archivo descargado correctamente");
+      
+    } catch (error) {
+      mostrarNotificacion("error", "Error de conexión al descargar");
+    }
+  };
+
   useEffect(() => {
     cargarHistorial();
   }, []);
@@ -272,6 +315,7 @@ export default function SubirArchivo() {
                 <th className="p-4 text-left">Archivo</th>
                 <th className="p-4 text-left">Descripción</th>
                 <th className="p-4 text-center">Fecha</th>
+                <th className="p-4 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -282,12 +326,21 @@ export default function SubirArchivo() {
                   <td className="p-4 text-center">
                     {new Date(h.fecha_subida).toLocaleString()}
                   </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => descargarArchivo(h.id, h.nombre_original)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 mx-auto transition"
+                    >
+                      <span className="material-symbols-outlined text-base">download</span>
+                      Descargar
+                    </button>
+                  </td>
                 </tr>
               ))}
 
               {historial.length === 0 && (
                 <tr>
-                  <td colSpan="3" className="p-8 text-center text-gray-500">
+                  <td colSpan="4" className="p-8 text-center text-gray-500">
                     Aún no ha subido documentos.
                   </td>
                 </tr>
