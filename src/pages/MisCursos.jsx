@@ -71,73 +71,85 @@ export default function MisCursos() {
 
       {/* Grid de cursos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cursos.map((curso) => (
-          <Link
-            key={curso.id}
-            to={`/profesor/mis-cursos/${curso.id}`}
-            className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-200"
-          >
-            {/* Cabecera de la tarjeta con color según el grado */}
-            <div className={`p-4 ${
-              curso.grado.includes('1') ? 'bg-green-600' :
-              curso.grado.includes('2') ? 'bg-blue-600' :
-              curso.grado.includes('3') ? 'bg-purple-600' :
-              curso.grado.includes('4') ? 'bg-orange-600' :
-              curso.grado.includes('5') ? 'bg-red-600' :
-              'bg-indigo-600'
-            } text-white`}>
-              <h3 className="text-xl font-bold">{curso.curso_nombre}</h3>
-              <p className="text-sm opacity-90 mt-1">
-                {curso.grado} - Sección {curso.seccion}
-              </p>
-            </div>
-
-            {/* Cuerpo de la tarjeta */}
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-base">group</span>
-                  {curso.total_alumnos || 0} alumnos
-                </span>
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-base">edit_note</span>
-                  {curso.notas_ingresadas || 0} notas
-                </span>
+        {cursos.length > 0 ? (
+          cursos.map((curso) => (
+            <Link
+              key={curso.id}
+              to={`/profesor/mis-cursos/${curso.id}`}
+              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-200"
+            >
+              {/* Cabecera de la tarjeta con color según el grado */}
+              <div className={`p-4 ${
+                curso.grado?.includes('1') ? 'bg-green-600' :
+                curso.grado?.includes('2') ? 'bg-blue-600' :
+                curso.grado?.includes('3') ? 'bg-purple-600' :
+                curso.grado?.includes('4') ? 'bg-orange-600' :
+                curso.grado?.includes('5') ? 'bg-red-600' :
+                'bg-indigo-600'
+              } text-white`}>
+                <h3 className="text-xl font-bold">{curso.curso_nombre}</h3>
+                <p className="text-sm opacity-90 mt-1">
+                  {curso.grado} - Sección {curso.seccion}
+                </p>
               </div>
 
-              {/* Barra de progreso */}
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full" 
-                  style={{ width: `${curso.progreso || 0}%` }}
-                ></div>
+              {/* Cuerpo de la tarjeta */}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-base">group</span>
+                    {curso.total_alumnos || 0} alumnos
+                  </span>
+                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-base">edit_note</span>
+                    {curso.notas_ingresadas || 0} notas
+                  </span>
+                </div>
+
+                {/* Barra de progreso */}
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${curso.progreso || 0}%` }}
+                  ></div>
+                </div>
+
+                {/* Botón de acción */}
+                <div className="flex justify-end">
+                  <span className="text-blue-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                    Ver detalles
+                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                  </span>
+                </div>
               </div>
 
-              {/* Botón de acción */}
-              <div className="flex justify-end">
-                <span className="text-blue-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                  Ver detalles
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                </span>
+              {/* PIE DE TARJETA */}
+              <div className="bg-gray-50 px-5 py-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500 text-center">
+                  Curso activo
+                </p>
               </div>
-            </div>
-
-            {/* ✅ PIE DE TARJETA CORREGIDO - sin fecha */}
-            <div className="bg-gray-50 px-5 py-3 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center">
-                Curso activo
-              </p>
-            </div>
-          </Link>
-        ))}
-
-        {cursos.length === 0 && !cargando && (
-          <div className="col-span-full text-center py-12">
-            <span className="material-symbols-outlined text-6xl text-gray-400">school</span>
-            <p className="text-gray-500 text-lg mt-4">No tienes cursos asignados</p>
-            <p className="text-gray-400 text-sm mt-2">
-              El director aún no te ha asignado ningún curso
+            </Link>
+          ))
+        ) : (
+          /* ✅ MENSAJE CUANDO NO HAY CURSOS */
+          <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200">
+            <span className="material-symbols-outlined text-7xl text-gray-300 mb-4">
+              school
+            </span>
+            <h3 className="text-2xl font-semibold text-gray-700 mb-2">
+              Aún no tienes cursos asignados
+            </h3>
+            <p className="text-gray-500 text-center max-w-md">
+              El administrador aún no te ha asignado ningún curso. 
+              Cuando te asignen cursos, aparecerán aquí para que puedas gestionar las notas.
             </p>
+            <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-700 flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">info</span>
+                Si crees que esto es un error, contacta al administrador
+              </p>
+            </div>
           </div>
         )}
       </div>
