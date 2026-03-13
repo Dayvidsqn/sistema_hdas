@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs"; // ✅ IMPORTAR FS CORRECTAMENTE
+import fs from "fs";
 import pool from "../db.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -48,7 +48,7 @@ const upload = multer({
 });
 
 /* ===========================================================
-   SUBIR ARCHIVOS (CORREGIDO)
+   SUBIR ARCHIVOS
    =========================================================== */
 
 router.post(
@@ -101,27 +101,27 @@ router.post(
       // Insertar cada archivo
       const archivosSubidos = [];
       for (const file of req.files) {
-      const nombreOriginalCorregido = Buffer
-        .from(file.originalname, "latin1")
-        .toString("utf8");
+        const nombreOriginalCorregido = Buffer
+          .from(file.originalname, "latin1")
+          .toString("utf8");
 
-      console.log("Subiendo archivo:", nombreOriginalCorregido);
+        console.log("Subiendo archivo:", nombreOriginalCorregido);
 
-      const result = await pool.query(
-        `INSERT INTO archivos 
-        (nombre_original, nombre_servidor, tipo, descripcion, profesor_id, fecha_subida)
-        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, nombre_original`,
-        [
-          nombreOriginalCorregido,
-          file.filename,
-          file.mimetype,
-          descripcion,
-          profesor_id
-        ]
-      );
+        const result = await pool.query(
+          `INSERT INTO archivos 
+          (nombre_original, nombre_servidor, tipo, descripcion, profesor_id, fecha_subida)
+          VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id, nombre_original`,
+          [
+            nombreOriginalCorregido,
+            file.filename,
+            file.mimetype,
+            descripcion,
+            profesor_id
+          ]
+        );
 
-      archivosSubidos.push(result.rows[0]);
-    }
+        archivosSubidos.push(result.rows[0]);
+      }
 
       console.log("=== DEBUG: SUBIDA EXITOSA ===");
       
@@ -169,6 +169,7 @@ router.get("/profesor/mis-archivos", authMiddleware, async (req, res) => {
       `SELECT 
         id,
         nombre_original,
+        nombre_servidor,
         descripcion,
         fecha_subida,
         tipo
@@ -245,18 +246,67 @@ router.get("/profesor/:id", async (req, res) => {
 });
 
 /* ===========================================================
-   DESCARGAR ARCHIVO
+   DESCARGAR ARCHIVO POR ID (CORREGIDO)
    =========================================================== */
 
-router.get("/descargar/:nombre", (req, res) => {
-  const filePath = path.resolve("uploads", req.params.nombre);
-  
-  // Verificar si el archivo existe
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ message: "Archivo no encontrado" });
+router.get("/descargar/:id", authMiddleware, async (req, res) => {
+  try {
+    const archivoId = req.params.id;
+    
+    console.log("Solicitud de descarga para archivo ID:", archivoId);
+    console.log("Usuario solicitante:", req.user.id, "Rol:", req.user.rol);
+
+    // Buscar el archivo en la base de datos por ID
+    const result = await pool.query(
+      `SELECT a.*, p.usuario_id as profesor_usuario_id 
+       FROM archivos a
+       INNER JOIN profesores p ON p.id = a.profesor_id
+       WHERE a.id = $1`,
+      [archivoId]
+    );
+
+    if (result.rows.length === 0) {
+      console.log("Archivo no encontrado en BD");
+      return res.status(404).json({ message: "Archivo no encontrado" });
+    }
+
+    const archivo = result.rows[0];
+    console.log("Archivo encontrado:", archivo.nombre_original);
+
+    // Verificar permisos:
+    // - El profesor puede descargar sus propios archivos
+    // - Los administradores pueden descargar cualquier archivo
+    if (req.user.rol === 'profesor' && archivo.profesor_usuario_id !== req.user.id) {
+      console.log("Permiso denegado: profesor intenta descargar archivo de otro profesor");
+      return res.status(403).json({ message: "No tienes permiso para descargar este archivo" });
+    }
+
+    // Si es admin, puede descargar cualquier archivo (no necesitamos verificación adicional)
+
+    // Construir la ruta del archivo
+    const filePath = path.resolve("uploads", archivo.nombre_servidor);
+    console.log("Ruta del archivo:", filePath);
+    
+    // Verificar si el archivo físico existe
+    if (!fs.existsSync(filePath)) {
+      console.log("Archivo físico no encontrado en:", filePath);
+      return res.status(404).json({ message: "Archivo físico no encontrado en el servidor" });
+    }
+    
+    // Enviar el archivo para descarga con el nombre original
+    res.download(filePath, archivo.nombre_original, (err) => {
+      if (err) {
+        console.error("Error durante la descarga:", err);
+        // No podemos enviar otra respuesta si ya comenzó la descarga
+      } else {
+        console.log("Descarga exitosa:", archivo.nombre_original);
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error al descargar archivo:", error);
+    res.status(500).json({ message: "Error al descargar el archivo" });
   }
-  
-  res.download(filePath);
 });
 
 /* ===========================================================

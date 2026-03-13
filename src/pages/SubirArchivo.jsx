@@ -126,7 +126,7 @@ export default function SubirArchivo() {
   };
 
   /* ===============================
-     DESCARGAR ARCHIVO
+     DESCARGAR ARCHIVO (CORREGIDO)
      =============================== */
 
   const descargarArchivo = async (archivoId, nombreArchivo) => {
@@ -140,7 +140,8 @@ export default function SubirArchivo() {
       });
 
       if (!res.ok) {
-        mostrarNotificacion("error", "Error al descargar el archivo");
+        const errorData = await res.json();
+        mostrarNotificacion("error", errorData.message || "Error al descargar el archivo");
         return;
       }
 
@@ -164,6 +165,7 @@ export default function SubirArchivo() {
       mostrarNotificacion("exito", "Archivo descargado correctamente");
       
     } catch (error) {
+      console.error("Error en descarga:", error);
       mostrarNotificacion("error", "Error de conexión al descargar");
     }
   };
