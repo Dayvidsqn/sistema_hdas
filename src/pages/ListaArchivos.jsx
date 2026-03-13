@@ -15,11 +15,68 @@ function ListaArchivos() {
       .catch((error) => console.error("Error al cargar archivos", error));
   }, []);
 
-  const descargarArchivo = (nombreServidor) => {
-    window.open(
-      `${API}/descargar/${nombreServidor}`,
-      "_blank"
-    );
+  /* ===============================
+    DESCARGAR ARCHIVO (CON TOKEN)
+    =============================== */
+
+  const descargarArchivo = async (archivoId, nombreArchivo, nombreServidor) => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        alert("No hay sesión activa. Inicie sesión nuevamente.");
+        window.location.href = "/";
+        return;
+      }
+
+      console.log("🔍 Descargando archivo:", { archivoId, nombreArchivo });
+
+      // IMPORTANTE: Usar el ID si el backend espera ID, o nombreServidor si espera nombre
+      // Por ahora, como el backend tiene /descargar/:id, usamos el ID
+      const url = `${API}/descargar/${archivoId}`;
+      
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.status === 401) {
+        alert("Sesión expirada. Inicie sesión nuevamente.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("rol");
+        window.location.href = "/";
+        return;
+      }
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        alert(error.message || "Error al descargar el archivo");
+        return;
+      }
+
+      // Obtener el blob del archivo
+      const blob = await res.blob();
+      
+      // Crear URL del blob
+      const urlBlob = window.URL.createObjectURL(blob);
+      
+      // Crear elemento <a> para descargar
+      const a = document.createElement('a');
+      a.href = urlBlob;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpiar
+      window.URL.revokeObjectURL(urlBlob);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error("Error en descarga:", error);
+      alert("Error de conexión al descargar");
+    }
   };
 
 
@@ -145,7 +202,7 @@ function ListaArchivos() {
                   </td>
                   <td className="p-4 text-center">
                     <button
-                      onClick={() => descargarArchivo(archivo.nombre_servidor)}
+                      onClick={() => descargarArchivo(archivo.id, archivo.nombre_original, archivo.nombre_servidor)}
                       className="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-xl font-semibold transition shadow"
                     >
                       Descargar
