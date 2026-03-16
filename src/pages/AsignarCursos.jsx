@@ -4,6 +4,7 @@ export default function AsignarCursos() {
   const [profesores, setProfesores] = useState([]);
   const [cursos, setCursos] = useState([]);
   const [asignaciones, setAsignaciones] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -17,6 +18,16 @@ export default function AsignarCursos() {
   const [cargando, setCargando] = useState(false);
 
   const API = `${import.meta.env.VITE_API_URL}`;
+
+  // Detectar cambios de tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Cargar profesores, cursos y asignaciones al iniciar
   useEffect(() => {
@@ -61,7 +72,6 @@ export default function AsignarCursos() {
         return;
       }
 
-      // ✅ Ruta CORREGIDA: ahora es /director/cursos
       const res = await fetch(`${API}/director/cursos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -198,35 +208,47 @@ export default function AsignarCursos() {
     }
   };
 
+  if (cargando) {
+    return (
+      <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} flex justify-center items-center h-64`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="ml-32 p-3 min-h-screen space-y-8">
-      {/* ENCABEZADO */}
-      <div className="bg-linear-to-r from-blue-700 to-blue-600 p-10 rounded-2xl shadow-lg text-white">
-        <h1 className="text-4xl font-bold flex items-center gap-3">
-          <span className="material-symbols-outlined text-4xl!">note</span>
+    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-3'} min-h-screen space-y-4 md:space-y-8`}>
+      
+      {/* ENCABEZADO - Responsive */}
+      <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-4 md:p-10 rounded-xl md:rounded-2xl shadow-lg text-white">
+        <h1 className="text-xl md:text-4xl font-bold flex items-center gap-2 md:gap-3">
+          <span className="material-symbols-outlined text-2xl md:text-4xl">note</span>
           Asignar Cursos
         </h1>
-        <p className="text-blue-100 text-lg mt-2">
+        <p className="text-blue-100 text-sm md:text-lg mt-1 md:mt-2">
           Asigne cursos a los profesores para cada grado y sección. Aquí puede gestionar las asignaciones actuales.
         </p>
       </div>
 
-      {/* FORMULARIO */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Nueva Asignación</h2>
+      {/* FORMULARIO - Responsive */}
+      <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Nueva Asignación</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {/* Selector de Profesor */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Profesor *
               </label>
               <select
                 name="profesor_id"
                 value={formData.profesor_id}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-600"
+                className="w-full border border-gray-300 rounded-lg p-1.5 md:p-2 text-sm md:text-base focus:ring-2 focus:ring-blue-600"
                 required
               >
                 <option value="">Seleccionar profesor</option>
@@ -240,14 +262,14 @@ export default function AsignarCursos() {
 
             {/* Selector de Curso */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Curso *
               </label>
               <select
                 name="curso_id"
                 value={formData.curso_id}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-600"
+                className="w-full border border-gray-300 rounded-lg p-1.5 md:p-2 text-sm md:text-base focus:ring-2 focus:ring-blue-600"
                 required
               >
                 <option value="">Seleccionar curso</option>
@@ -261,14 +283,14 @@ export default function AsignarCursos() {
 
             {/* Grado */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Grado *
               </label>
               <select
                 name="grado"
                 value={formData.grado}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-600"
+                className="w-full border border-gray-300 rounded-lg p-1.5 md:p-2 text-sm md:text-base focus:ring-2 focus:ring-blue-600"
                 required
               >
                 <option value="">Seleccionar grado</option>
@@ -283,14 +305,14 @@ export default function AsignarCursos() {
 
             {/* Sección */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Sección *
               </label>
               <select
                 name="seccion"
                 value={formData.seccion}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-600"
+                className="w-full border border-gray-300 rounded-lg p-1.5 md:p-2 text-sm md:text-base focus:ring-2 focus:ring-blue-600"
                 required
               >
                 <option value="">Seleccionar sección</option>
@@ -304,7 +326,7 @@ export default function AsignarCursos() {
           <button
             type="submit"
             disabled={cargando}
-            className={`bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-semibold ${
+            className={`bg-blue-700 hover:bg-blue-800 text-white px-4 md:px-6 py-1.5 md:py-2 rounded-lg font-semibold text-sm md:text-base ${
               cargando ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -312,42 +334,47 @@ export default function AsignarCursos() {
           </button>
 
           {mensaje && (
-            <p className={`text-sm ${mensaje.includes("✅") ? "text-green-600" : "text-red-600"}`}>
+            <p className={`text-xs md:text-sm ${mensaje.includes("✅") ? "text-green-600" : "text-red-600"}`}>
               {mensaje}
             </p>
           )}
         </form>
       </div>
 
-      {/* LISTA DE ASIGNACIONES */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Asignaciones Actuales</h2>
+      {/* LISTA DE ASIGNACIONES - Responsive */}
+      <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Asignaciones Actuales</h2>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+          <table className="min-w-[600px] md:min-w-full w-full border-collapse">
             <thead className="bg-blue-700 text-white">
               <tr>
-                <th className="p-3 text-left">Profesor</th>
-                <th className="p-3 text-left">Curso</th>
-                <th className="p-3 text-left">Grado</th>
-                <th className="p-3 text-left">Sección</th>
-                <th className="p-3 text-center">Acciones</th>
+                <th className="p-2 md:p-3 text-left text-xs md:text-base">Profesor</th>
+                <th className="p-2 md:p-3 text-left text-xs md:text-base">Curso</th>
+                <th className="p-2 md:p-3 text-left text-xs md:text-base">Grado</th>
+                <th className="p-2 md:p-3 text-left text-xs md:text-base">Sección</th>
+                <th className="p-2 md:p-3 text-center text-xs md:text-base">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {asignaciones.map((a) => (
                 <tr key={a.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3">{a.profesor_nombre} {a.profesor_apellido}</td>
-                  <td className="p-3">{a.curso_nombre}</td>
-                  <td className="p-3">{a.grado}</td>
-                  <td className="p-3">{a.seccion}</td>
-                  <td className="p-3 text-center">
+                  <td className="p-2 md:p-3 text-xs md:text-base whitespace-nowrap">
+                    {isMobile 
+                      ? `${a.profesor_nombre?.split(' ')[0]} ${a.profesor_apellido?.split(' ')[0]}`
+                      : `${a.profesor_nombre} ${a.profesor_apellido}`
+                    }
+                  </td>
+                  <td className="p-2 md:p-3 text-xs md:text-base">{a.curso_nombre}</td>
+                  <td className="p-2 md:p-3 text-xs md:text-base">{a.grado}</td>
+                  <td className="p-2 md:p-3 text-xs md:text-base">{a.seccion}</td>
+                  <td className="p-2 md:p-3 text-center">
                     <button
                       onClick={() => eliminarAsignacion(a.id)}
-                      className="text-red-600 hover:text-red-800 font-semibold"
+                      className="text-red-600 hover:text-red-800 font-semibold text-xs md:text-sm"
                       title="Eliminar asignación"
                     >
-                      Eliminar
+                      {isMobile ? "X" : "Eliminar"}
                     </button>
                   </td>
                 </tr>
@@ -355,7 +382,7 @@ export default function AsignarCursos() {
 
               {asignaciones.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-500">
+                  <td colSpan="5" className="p-3 md:p-4 text-center text-gray-500 text-sm md:text-base">
                     No hay asignaciones registradas
                   </td>
                 </tr>
