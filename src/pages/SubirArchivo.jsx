@@ -234,7 +234,7 @@ export default function SubirArchivo() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : ''} space-y-6 md:space-y-10 relative`}>
+    <div className={`${isMobile ? 'p-4 pt-5' : ''} space-y-6 md:space-y-10 relative`}>
       
       {/* ============================================ */}
       {/* NOTIFICACIÓN FLOTANTE */}
@@ -263,7 +263,7 @@ export default function SubirArchivo() {
       )}
 
       {/* HEADER - Responsive */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-10 text-white">
+      <div className="bg-linear-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-10 text-white">
         <h1 className="text-xl md:text-4xl font-bold flex items-center gap-2 md:gap-3">
           <span className="material-symbols-outlined text-2xl md:text-4xl">cloud_upload</span>
           Subir Trabajos
