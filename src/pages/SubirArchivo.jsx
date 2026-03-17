@@ -234,7 +234,7 @@ export default function SubirArchivo() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} space-y-6 md:space-y-10 relative`}>
+    <div className={`${isMobile ? 'p-4 pt-20' : ''} space-y-6 md:space-y-10 relative`}>
       
       {/* ============================================ */}
       {/* NOTIFICACIÓN FLOTANTE */}
