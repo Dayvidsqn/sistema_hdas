@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function CargarNotas() {
   const { asignacionId } = useParams();
+  const navigate = useNavigate();
   const [alumnos, setAlumnos] = useState([]);
   const [cursoInfo, setCursoInfo] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -131,6 +132,10 @@ export default function CargarNotas() {
     return (suma / valores.length).toFixed(2);
   };
 
+  const volverAMisCursos = () => {
+    navigate("/profesor/mis-cursos");
+  };
+
   if (cargando) {
     return (
       <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} flex justify-center items-center h-64`}>
@@ -143,7 +148,17 @@ export default function CargarNotas() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} min-h-screen`}>
+    <div className={`${isMobile ? 'p-4 pt-5' : 'ml-32 p-6'} min-h-screen`}>
+      
+      {/* Botón de retroceso - Responsive */}
+      <button
+        onClick={volverAMisCursos}
+        className="mb-3 md:mb-4 flex items-center gap-1 md:gap-2 text-blue-700 hover:text-blue-900 transition"
+      >
+        <span className="material-symbols-outlined text-lg md:text-2xl">arrow_back</span>
+        <span className="text-sm md:text-base font-medium">Volver a Mis Cursos</span>
+      </button>
+
       {/* Header con información del curso - Responsive */}
       {cursoInfo && (
         <div className="bg-gradient-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-8 text-white mb-4 md:mb-8">

@@ -161,7 +161,7 @@ export default function Alumnos() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-3'} min-h-screen space-y-4 md:space-y-8`}>
+    <div className={`${isMobile ? 'p-4 pt-5' : 'ml-32 p-3'} min-h-screen space-y-4 md:space-y-8`}>
 
       {/* ENCABEZADO - Responsive */}
       <div className="bg-linear-to-r from-blue-700 to-blue-600 p-4 md:p-10 rounded-xl md:rounded-2xl shadow-lg text-white">

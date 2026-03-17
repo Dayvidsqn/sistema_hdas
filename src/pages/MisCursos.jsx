@@ -78,9 +78,9 @@ export default function MisCursos() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-6'} min-h-screen`}>
+    <div className={`${isMobile ? 'p-4 pt-5' : 'ml-32 p-6'} min-h-screen`}>
       {/* Header - Responsive */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-8 text-white mb-4 md:mb-8">
+      <div className="bg-linear-to-r from-blue-700 to-blue-600 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-8 text-white mb-4 md:mb-8">
         <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2 md:gap-3">
           <span className="material-symbols-outlined text-2xl md:text-4xl">school</span>
           Mis Cursos Asignados

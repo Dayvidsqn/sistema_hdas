@@ -220,10 +220,10 @@ export default function AsignarCursos() {
   }
 
   return (
-    <div className={`${isMobile ? 'p-4 pt-20' : 'ml-32 p-3'} min-h-screen space-y-4 md:space-y-8`}>
+    <div className={`${isMobile ? 'p-4 pt-5' : 'ml-32 p-3'} min-h-screen space-y-4 md:space-y-8`}>
       
       {/* ENCABEZADO - Responsive */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-4 md:p-10 rounded-xl md:rounded-2xl shadow-lg text-white">
+      <div className="bg-linear-to-r from-blue-700 to-blue-600 p-4 md:p-10 rounded-xl md:rounded-2xl shadow-lg text-white">
         <h1 className="text-xl md:text-4xl font-bold flex items-center gap-2 md:gap-3">
           <span className="material-symbols-outlined text-2xl md:text-4xl">note</span>
           Asignar Cursos
