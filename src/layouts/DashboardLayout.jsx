@@ -39,10 +39,10 @@ function DashboardLayout({ children }) {
 
         {/* El main se adapta: en desktop margen izquierdo fijo, en móvil padding-top para el header */}
         <main 
-          // className={`
-          //   min-h-screen transition-all duration-300
-          //   ${isMobile ? 'pt-16 p-3' : 'ml-32 p-3'}
-          // `}
+          className={`
+            min-h-screen transition-all duration-300
+            ${isMobile ? 'pt-16 p-3' : 'ml-32 p-3'}
+          `}
         >
           {children}
         </main>
