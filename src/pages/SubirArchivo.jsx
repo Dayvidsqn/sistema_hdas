@@ -77,7 +77,7 @@ export default function SubirArchivo() {
     }
 
     setCargando(true);
-    setMensaje("");
+    setMensaje(""); 
 
     try {
       const formData = new FormData();

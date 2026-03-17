@@ -3,9 +3,7 @@ import SubirArchivo from "./SubirArchivo";
 
 function Profesor() {
   return (
-    <DashboardLayout>
       <SubirArchivo />
-    </DashboardLayout>
   );
 }
 
