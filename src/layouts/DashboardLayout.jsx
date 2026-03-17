@@ -41,7 +41,7 @@ function DashboardLayout({ children }) {
         <main 
           className={`
             min-h-screen transition-all duration-300
-            ${isMobile ? 'pt-16 p-3' : ''}
+            ${isMobile ? 'pt-16 p-3' : 'ml-32 p-6'}
           `}
         >
           {children}
