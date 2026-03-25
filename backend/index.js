@@ -53,6 +53,18 @@ if (!fs.existsSync(uploadsDir)) {
 // Servir archivos estáticos
 app.use("/uploads", express.static(uploadsDir));
 
+// ============================================
+// ✅ AGREGAR ENDPOINT DE SALUD AQUÍ (sin autenticación)
+// ============================================
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development"
+  });
+});
+
 // Rutas
 app.use("/api/auth", authRoutes);
 app.use("/api/archivos", archivosRoutes);
