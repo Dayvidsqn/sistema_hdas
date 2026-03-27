@@ -34,8 +34,23 @@ export default function Alumnos() {
   }, []);
 
   // Opciones para selects
-  const grados = ["1ro", "2do", "3ro", "4to", "5to", "6to"];
-  const secciones = ["A", "B", "C"];
+  const grados = ["3 años", "4 años", "5 años", "1ro", "2do", "3ro", "4to", "5to", "6to"];
+  
+  // Mapeo de grado a sección
+  const getSeccionPorGrado = (grado) => {
+    const mapeo = {
+      "3 años": "Happy dolphins",
+      "4 años": "Little lions",
+      "5 años": "Brave tigers",
+      "1ro": "The stars",
+      "2do": "The dreamers",
+      "3ro": "The explorers",
+      "4to": "The thinkers",
+      "5to": "The leaders",
+      "6to": "The leaders"
+    };
+    return mapeo[grado] || "";
+  };
 
   useEffect(() => {
     cargarAlumnos();
@@ -81,10 +96,20 @@ export default function Alumnos() {
     // Campos que deben ir siempre en mayúsculas
     const camposMayus = ["nombres", "apellidos"];
 
-    setForm({
-      ...form,
-      [name]: camposMayus.includes(name) ? value.toUpperCase() : value
-    });
+    // Si cambia el grado, actualizar automáticamente la sección
+    if (name === "grado") {
+      const nuevaSeccion = getSeccionPorGrado(value);
+      setForm({
+        ...form,
+        grado: value,
+        seccion: nuevaSeccion
+      });
+    } else {
+      setForm({
+        ...form,
+        [name]: camposMayus.includes(name) ? value.toUpperCase() : value
+      });
+    }
   };
 
   const registrarAlumno = async (e) => {
@@ -245,7 +270,7 @@ export default function Alumnos() {
             </select>
           </div>
 
-          {/* Sección - SELECTOR */}
+          {/* Sección - SELECTOR (ahora automático pero editable) */}
           <div>
             <label className="font-semibold text-gray-700 text-sm md:text-base">Sección *</label>
             <select
@@ -256,10 +281,31 @@ export default function Alumnos() {
               required
             >
               <option value="">Seleccionar sección</option>
-              {secciones.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {/* Opciones dinámicas según el grado seleccionado */}
+              {form.grado && (
+                <option value={getSeccionPorGrado(form.grado)}>
+                  {getSeccionPorGrado(form.grado)}
+                </option>
+              )}
+              {/* También permitir seleccionar otras secciones manualmente si es necesario */}
+              {!form.grado && (
+                <>
+                  <option value="Happy dolphins">Happy dolphins</option>
+                  <option value="Little lions">Little lions</option>
+                  <option value="Brave tigers">Brave tigers</option>
+                  <option value="The stars">The stars</option>
+                  <option value="The dreamers">The dreamers</option>
+                  <option value="The explorers">The explorers</option>
+                  <option value="The thinkers">The thinkers</option>
+                  <option value="The leaders">The leaders</option>
+                </>
+              )}
             </select>
+            {form.grado && (
+              <p className="text-xs text-blue-600 mt-1">
+                Sección automática según grado: {getSeccionPorGrado(form.grado)}
+              </p>
+            )}
           </div>
 
           {/* Fecha de nacimiento */}
