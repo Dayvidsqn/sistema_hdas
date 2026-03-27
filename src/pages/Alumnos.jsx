@@ -19,6 +19,8 @@ export default function Alumnos() {
   // Estados para filtros
   const [ordenGrado, setOrdenGrado] = useState("asc");
   const [ordenFecha, setOrdenFecha] = useState("desc");
+  const [filtroGrado, setFiltroGrado] = useState(""); // Filtro por grado
+  const [busqueda, setBusqueda] = useState(""); // Buscador por nombre/apellido/DNI
 
   const [mensaje, setMensaje] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -57,18 +59,33 @@ export default function Alumnos() {
   }, []);
 
   useEffect(() => {
-    ordenarAlumnos();
-  }, [alumnos, ordenGrado, ordenFecha]);
+    aplicarFiltrosYOrden();
+  }, [alumnos, ordenGrado, ordenFecha, filtroGrado, busqueda]);
 
   const cargarAlumnos = async () => {
     const data = await getAlumnos();
     setAlumnos(data || []);
   };
 
-  const ordenarAlumnos = () => {
+  const aplicarFiltrosYOrden = () => {
     let lista = [...alumnos];
 
-    // Ordenar por grado (extrayendo el número)
+    // 1. APLICAR FILTRO POR GRADO
+    if (filtroGrado) {
+      lista = lista.filter(alumno => alumno.grado === filtroGrado);
+    }
+
+    // 2. APLICAR BÚSQUEDA POR NOMBRE, APELLIDO O DNI
+    if (busqueda.trim()) {
+      const busquedaLower = busqueda.toLowerCase().trim();
+      lista = lista.filter(alumno => 
+        alumno.nombres?.toLowerCase().includes(busquedaLower) ||
+        alumno.apellidos?.toLowerCase().includes(busquedaLower) ||
+        alumno.dni?.includes(busqueda)
+      );
+    }
+
+    // 3. ORDENAR POR GRADO
     lista.sort((a, b) => {
       const gradoA = parseInt(a.grado?.replace(/\D/g, '') || 0);
       const gradoB = parseInt(b.grado?.replace(/\D/g, '') || 0);
@@ -80,7 +97,7 @@ export default function Alumnos() {
       }
     });
 
-    // Luego ordenar por fecha de registro (usando ID como referencia)
+    // 4. ORDENAR POR FECHA DE REGISTRO
     if (ordenFecha === "desc") {
       lista.sort((a, b) => b.id - a.id);
     } else {
@@ -172,6 +189,12 @@ export default function Alumnos() {
     } catch {
       return dateStr;
     }
+  };
+
+  // Limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setFiltroGrado("");
+    setBusqueda("");
   };
 
   if (cargando) {
@@ -287,11 +310,6 @@ export default function Alumnos() {
                 </option>
               )}
             </select>
-            {form.grado && (
-              <p className="text-xs text-blue-600 mt-1">
-                ✓ Sección asignada automáticamente según el grado seleccionado
-              </p>
-            )}
           </div>
 
           {/* Fecha de nacimiento */}
@@ -349,16 +367,59 @@ export default function Alumnos() {
 
       {/* LISTA CON FILTROS - Responsive */}
       <div className="bg-white p-4 md:p-8 rounded-xl md:rounded-2xl shadow-lg md:shadow-xl border border-gray-100">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4 md:mb-6">
+        <div className="flex flex-col gap-4 mb-4 md:mb-6">
           <h2 className="text-lg md:text-2xl font-bold flex items-center gap-2 text-gray-700">
             <span className="material-symbols-outlined text-xl md:text-2xl">group</span>
             Lista de Alumnos
           </h2>
 
-          {/* FILTROS DE ORDENAMIENTO - Responsive */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          {/* BARRA DE BÚSQUEDA Y FILTROS */}
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            {/* BUSCADOR */}
+            <div className="flex-1">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, apellido o DNI..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full pl-10 pr-4 p-2 md:p-3 border rounded-lg md:rounded-xl text-sm md:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* FILTRO POR GRADO */}
+            <div className="w-full md:w-48">
+              <select
+                value={filtroGrado}
+                onChange={(e) => setFiltroGrado(e.target.value)}
+                className="w-full p-2 md:p-3 border rounded-lg md:rounded-xl bg-white text-sm md:text-base"
+              >
+                <option value="">Todos los grados</option>
+                {grados.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* BOTÓN LIMPIAR FILTROS */}
+            {(filtroGrado || busqueda) && (
+              <button
+                onClick={limpiarFiltros}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold text-sm transition whitespace-nowrap"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+
+          {/* FILTROS DE ORDENAMIENTO */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-              <label className="text-xs md:text-sm font-semibold text-gray-600">Grado:</label>
+              <label className="text-xs md:text-sm font-semibold text-gray-600">Ordenar por grado:</label>
               <select
                 value={ordenGrado}
                 onChange={(e) => setOrdenGrado(e.target.value)}
@@ -370,7 +431,7 @@ export default function Alumnos() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-              <label className="text-xs md:text-sm font-semibold text-gray-600">Fecha:</label>
+              <label className="text-xs md:text-sm font-semibold text-gray-600">Ordenar por fecha:</label>
               <select
                 value={ordenFecha}
                 onChange={(e) => setOrdenFecha(e.target.value)}
@@ -432,7 +493,7 @@ export default function Alumnos() {
               {alumnosFiltrados.length === 0 && (
                 <tr>
                   <td colSpan="9" className="p-4 md:p-8 text-center text-gray-500 text-sm md:text-base">
-                    No hay alumnos registrados.
+                    {busqueda || filtroGrado ? "No se encontraron alumnos con los filtros aplicados." : "No hay alumnos registrados."}
                   </td>
                 </tr>
               )}
@@ -442,7 +503,7 @@ export default function Alumnos() {
 
         {/* Contador de alumnos */}
         <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-500 text-right">
-          Total de alumnos: {alumnosFiltrados.length}
+          Mostrando {alumnosFiltrados.length} de {alumnos.length} alumnos
         </div>
       </div>
 
