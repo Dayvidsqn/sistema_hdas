@@ -258,7 +258,7 @@ export default function CargarNotas() {
       </div>
 
       {/* Leyenda - Responsive */}
-      <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-500 text-center px-2">
+      <div className="mt-3 md:mt-4 text-xs md:text-sm text-white text-center px-2">
         * Las notas deben estar entre 0 y 20. Use punto para decimales (ej: 15.5)
       </div>
     </div>
