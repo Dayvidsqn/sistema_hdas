@@ -270,40 +270,26 @@ export default function Alumnos() {
             </select>
           </div>
 
-          {/* Sección - SELECTOR (ahora automático pero editable) */}
+          {/* Sección - SELECT DESHABILITADO */}
           <div>
             <label className="font-semibold text-gray-700 text-sm md:text-base">Sección *</label>
             <select
               name="seccion"
               value={form.seccion}
-              onChange={manejarCambio}
-              className="w-full p-2 md:p-3 border rounded-lg md:rounded-xl mt-1 bg-white text-sm md:text-base"
+              disabled
+              className="w-full p-2 md:p-3 border rounded-lg md:rounded-xl mt-1 bg-gray-100 text-gray-700 text-sm md:text-base cursor-not-allowed"
               required
             >
-              <option value="">Seleccionar sección</option>
-              {/* Opciones dinámicas según el grado seleccionado */}
+              <option value="">{form.grado ? "Seleccione un grado primero" : "Seleccione un grado"}</option>
               {form.grado && (
                 <option value={getSeccionPorGrado(form.grado)}>
                   {getSeccionPorGrado(form.grado)}
                 </option>
               )}
-              {/* También permitir seleccionar otras secciones manualmente si es necesario */}
-              {!form.grado && (
-                <>
-                  <option value="Happy dolphins">Happy dolphins</option>
-                  <option value="Little lions">Little lions</option>
-                  <option value="Brave tigers">Brave tigers</option>
-                  <option value="The stars">The stars</option>
-                  <option value="The dreamers">The dreamers</option>
-                  <option value="The explorers">The explorers</option>
-                  <option value="The thinkers">The thinkers</option>
-                  <option value="The leaders">The leaders</option>
-                </>
-              )}
             </select>
             {form.grado && (
               <p className="text-xs text-blue-600 mt-1">
-                Sección automática según grado: {getSeccionPorGrado(form.grado)}
+                ✓ Sección asignada automáticamente según el grado seleccionado
               </p>
             )}
           </div>
