@@ -153,7 +153,7 @@ export default function CargarNotas() {
       {/* Botón de retroceso - Responsive */}
       <button
         onClick={volverAMisCursos}
-        className="mb-3 md:mb-4 flex items-center gap-1 md:gap-2 text-blue-700 hover:text-blue-900 transition"
+        className="mb-3 md:mb-4 flex items-center gap-1 md:gap-2 bg-white hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg border-2 border-blue-300 hover:border-blue-400 shadow-sm transition duration-200"
       >
         <span className="material-symbols-outlined text-lg md:text-2xl">arrow_back</span>
         <span className="text-sm md:text-base font-medium">Volver a Mis Cursos</span>
