@@ -383,6 +383,8 @@ export default function Alumnos() {
                 </span>
                 <input
                   type="text"
+                  id="buscador-alumnos"
+                  name="buscador"
                   placeholder="Buscar por nombre, apellido o DNI..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
