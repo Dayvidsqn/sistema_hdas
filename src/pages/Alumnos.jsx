@@ -85,28 +85,34 @@ export default function Alumnos() {
       );
     }
 
-    // 3. ORDENAR POR GRADO
+    // 3. ORDENAR POR GRADO Y FECHA (COMBINADO)
     lista.sort((a, b) => {
+      // Extraer número del grado para ordenamiento numérico
       const gradoA = parseInt(a.grado?.replace(/\D/g, '') || 0);
       const gradoB = parseInt(b.grado?.replace(/\D/g, '') || 0);
       
+      // Ordenar por grado según selección
+      let comparacionGrado;
       if (ordenGrado === "asc") {
-        return gradoA - gradoB;
+        comparacionGrado = gradoA - gradoB;
       } else {
-        return gradoB - gradoA;
+        comparacionGrado = gradoB - gradoA;
       }
+      
+      // Si los grados son iguales, ordenar por fecha (usando ID como referencia)
+      if (comparacionGrado === 0) {
+        if (ordenFecha === "desc") {
+          return b.id - a.id; // Más recientes primero (ID mayor)
+        } else {
+          return a.id - b.id; // Más antiguos primero (ID menor)
+        }
+      }
+      
+      return comparacionGrado;
     });
-
-    // 4. ORDENAR POR FECHA DE REGISTRO
-    if (ordenFecha === "desc") {
-      lista.sort((a, b) => b.id - a.id);
-    } else {
-      lista.sort((a, b) => a.id - b.id);
-    }
 
     setAlumnosFiltrados(lista);
   };
-
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
@@ -388,7 +394,7 @@ export default function Alumnos() {
                   placeholder="Buscar por nombre, apellido o DNI..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  className="w-full pl-10 pr-4 p-2 md:p-3 border rounded-lg md:rounded-xl text-sm md:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 p-2 border rounded-lg md:rounded-xl text-sm md:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
