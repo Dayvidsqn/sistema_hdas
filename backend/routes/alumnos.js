@@ -121,4 +121,64 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// Actualizar alumno (solo director)
+router.put("/:id", authMiddleware, async (req, res) => {
+  try {
+    // Verificar que sea director
+    if (req.user.rol !== "director") {
+      return res.status(403).json({ message: "Acceso denegado. Solo para directores." });
+    }
+
+    const { id } = req.params;
+    const { nombres, apellidos, dni, grado, seccion, fecha_nacimiento, direccion, telefono } = req.body;
+
+    console.log("📥 Actualizando alumno ID:", id, req.body);
+
+    // Validar campos obligatorios
+    if (!nombres || !apellidos || !dni) {
+      return res.status(400).json({ 
+        message: "Los campos nombres, apellidos y DNI son obligatorios" 
+      });
+    }
+
+    // Validar que id sea un número
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "ID inválido" });
+    }
+
+    // Verificar si el alumno existe
+    const check = await pool.query("SELECT id FROM alumnos WHERE id = $1", [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ message: "Alumno no encontrado" });
+    }
+
+    // Verificar si el DNI ya existe para otro alumno
+    const existe = await pool.query(
+      "SELECT id FROM alumnos WHERE dni = $1 AND id != $2",
+      [dni, id]
+    );
+
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ message: "Ya existe otro alumno con ese DNI" });
+    }
+
+    // Actualizar el alumno
+    const result = await pool.query(
+      `UPDATE alumnos 
+       SET nombres = $1, apellidos = $2, dni = $3, grado = $4, seccion = $5, 
+           fecha_nacimiento = $6, direccion = $7, telefono = $8
+       WHERE id = $9 RETURNING id`,
+      [nombres, apellidos, dni, grado || null, seccion || null, 
+       fecha_nacimiento || null, direccion || null, telefono || null, id]
+    );
+
+    console.log("✅ Alumno actualizado correctamente, ID:", result.rows[0].id);
+    res.json({ message: "Alumno actualizado correctamente" });
+
+  } catch (error) {
+    console.error("Error al actualizar alumno:", error);
+    res.status(500).json({ message: "Error al actualizar alumno" });
+  }
+});
+
 export default router;

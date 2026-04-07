@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import fondoLogin from "../assets/fondo-estudiante-login.png";
+import fondoLogin from "../../assets/fondo-estudiante-login.png";
 
 export default function LoginEstudiante() {
   const [dni, setDni] = useState("");

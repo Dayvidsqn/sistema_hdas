@@ -37,6 +37,11 @@ export async function crearAlumno(data) {
       body: JSON.stringify(data),
     });
 
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Error al crear alumno");
+    }
+
     return await res.json();
   } catch (error) {
     console.error("Error creando alumno:", error);
@@ -52,9 +57,38 @@ export async function eliminarAlumno(id) {
       headers: getHeaders(),
     });
 
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Error al eliminar alumno");
+    }
+
     return await res.json();
   } catch (error) {
     console.error("Error eliminando alumno:", error);
     throw error;
   }
 }
+
+// Actualizar alumno
+export const actualizarAlumno = async (id, alumnoData) => {
+  try {
+    console.log("📤 Actualizando alumno ID:", id, alumnoData);
+    
+    const res = await fetch(`${API}/${id}`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(alumnoData)
+    });
+    
+    const data = await res.json();
+    console.log("📥 Respuesta:", data);
+    
+    if (!res.ok) {
+      throw new Error(data.message || "Error al actualizar alumno");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error en actualizarAlumno:", error);
+    throw error;
+  }
+};

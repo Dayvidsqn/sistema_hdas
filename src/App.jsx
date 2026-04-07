@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Director from "./pages/Director";
-import Alumnos from "./pages/Alumnos";
-import Profesor from "./pages/Profesor";
-import AsignarCursos from "./pages/AsignarCursos";
+import Login from "./pages/Login/Login";
+import Alumnos from "./pages/Director/Alumnos";
+import AsignarCursos from "./pages/Director/AsignarCursos";
 import DashboardLayout from "./layouts/DashboardLayout";
-import MisCursos from "./pages/MisCursos";
-import CargarNotas from "./pages/CargarNotas";
-import LoginEstudiante from "./pages/LoginEstudiante";
+import MisCursos from "./pages/Profesor/MisCursos";
+import CargarNotas from "./pages/Profesor/CargarNotas";
+import LoginEstudiante from "./pages/Login/LoginEstudiante";
 import MisNotas from "./pages/MisNotas";
+import SubirArchivo from "./pages/Profesor/SubirArchivo";
+import ListaArchivos from "./pages/Director/ListaArchivos";
 
 function App() {
   return (
@@ -26,7 +26,7 @@ function App() {
           path="/director"
           element={
             <DashboardLayout>
-              <Director />
+              <ListaArchivos />
             </DashboardLayout>
           }
         />
@@ -55,7 +55,7 @@ function App() {
           path="/profesor/subir-trabajos"
           element={
             <DashboardLayout>
-              <Profesor />
+              <SubirArchivo/>
             </DashboardLayout>
           }
         />

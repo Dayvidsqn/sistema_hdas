@@ -1,5 +1,5 @@
 import { useState } from "react";
-import fondo from "../assets/fondo-login.png";
+import fondo from "../../assets/fondo-login-docente.png";
 
 function Login() {
   const [email, setEmail] = useState("");
